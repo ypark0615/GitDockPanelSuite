@@ -17,5 +17,11 @@ namespace GitDockPanelSuite
         {
             InitializeComponent();
         }
+
+        public void LoadImage(string filePath)
+        {
+            Image bitmap = Image.FromFile(filePath);
+            ImageViewer.LoadBitmap(new Bitmap(bitmap));
+        }
     }
 }

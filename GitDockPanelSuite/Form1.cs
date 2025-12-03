@@ -19,16 +19,16 @@ namespace GitDockPanelSuite
         {
             InitializeComponent();
 
-            _dockPanel = new DockPanel
+            _dockPanel = new DockPanel // DockPanel 객체 생성
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill // 폼 전체에 도킹
             };
-            Controls.Add(_dockPanel);
+            Controls.Add(_dockPanel); // 폼에 DockPanel 추가
 
             //VIsual Studio 2015 테마 적용
             _dockPanel.Theme = new VS2015BlueTheme();
 
-            //LoadDockingWindows();
+            LoadDockingWindows();
         }
 
         private void LoadDockingWindows()
@@ -64,8 +64,22 @@ namespace GitDockPanelSuite
             return findForm;
         }
 
-        // 병합 오류 수정
+        private void imageOpenToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CameraForm cameraForm = GetDockForm<CameraForm>();
+            if (cameraForm is null)
+                return;
 
-
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "이미지 파일 선택";
+                openFileDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = openFileDialog.FileName;
+                    cameraForm.LoadImage(openFileDialog.FileName);
+                }
+            }
+        }
     }
 }

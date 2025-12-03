@@ -28,12 +28,31 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.ImageViewer = new GitDockPanelSuite.ImageViewControl();
+            this.SuspendLayout();
+            // 
+            // ImageViewer
+            // 
+            this.ImageViewer.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ImageViewer.Location = new System.Drawing.Point(0, 0);
+            this.ImageViewer.Name = "ImageViewer";
+            this.ImageViewer.Size = new System.Drawing.Size(800, 450);
+            this.ImageViewer.TabIndex = 0;
+            // 
+            // CameraForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.ImageViewer);
+            this.Name = "CameraForm";
             this.Text = "CameraForm";
+            this.ResumeLayout(false);
+
         }
 
         #endregion
+
+        private ImageViewControl ImageViewer;
     }
 }
