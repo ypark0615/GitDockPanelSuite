@@ -22,14 +22,26 @@ namespace GitDockPanelSuite
         private RectangleF ImageRect = new RectangleF(0, 0, 0, 0); // 이미지가 그려질 영역. 이미지 그랩으로 인한 이동 및 줌에 따라 변경됨
 
         private float _curZoom = 1.0f; // 현재 줌 레벨
-        private float _zoomFactor = 1.0f; // 줌 배율
+        private float _zoomFactor = 1.1f; // 줌 배율
 
         private float MinZoom = 1.0f; // 최소 줌 레벨
         private float MaxZoom = 100.0f; // 최대 줌 레벨
 
+        private Rectangle _screenSelectedRect = Rectangle.Empty;
+
         public ImageViewControl()
         {
             InitializeComponent();
+            InitializeCanvas();
+
+            MouseWheel += new MouseEventHandler(ImageViewControl_MouseWheel);
+        }
+
+        private void InitializeCanvas()
+        {
+            ResizeCanvas();
+
+            //DoubleBuffered = true;
         }
 
         private void ResizeCanvas()
@@ -48,12 +60,11 @@ namespace GitDockPanelSuite
             float offsetY = virtualHeight < Height ? (Height - virtualHeight) / 2 : 0;
 
             ImageRect = new RectangleF(offsetX, offsetY, virtualWidth, virtualHeight);
-
         }
 
         private void FitImageToScreen()
         {
-            RecalcZoomRatio();
+            RecalcZoomRatio(); // 이미지가 스크린에 꽉 차는 줌 배율 계산
 
             float NewWidth = _bitmapImage.Width * _curZoom;
             float NewHeight = _bitmapImage.Width * _curZoom;
@@ -100,14 +111,14 @@ namespace GitDockPanelSuite
 
             if(_bitmapImage != null && Canvas != null)
             {
-                using (Graphics g = e.Graphics)
+                using (Graphics g = Graphics.FromImage(Canvas))
                 {
                     g.Clear(Color.Transparent);
 
                     g.InterpolationMode = InterpolationMode.NearestNeighbor;
                     g.DrawImage(_bitmapImage, ImageRect);
 
-                    // DrawDiagrma(g);
+                    // DrawDiagram(g);
 
                     e.Graphics.DrawImage(Canvas, 0, 0); // 화면에 표시
                 }
@@ -148,5 +159,92 @@ namespace GitDockPanelSuite
             FitImageToScreen();
         }
 
+        private void ImageViewControl_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            FitImageToScreen();
+        }
+
+        private void ImageViewControl_Resize(object sender, EventArgs e)
+        {
+            ResizeCanvas();
+            Invalidate();
+        }
+
+
+
+        private PointF GetScreenOffset()
+        {
+            return new PointF(ImageRect.X, ImageRect.Y);;
+        }
+
+        /* private Rectangle ScreenToVirtual(Rectangle screenRect)
+        {
+            PointF offset = GetScreenOffset();
+            return new Rectangle(
+                (int)((screenRect.X - offset.X) / _curZoom + 0.5f),
+                (int)((screenRect.Y - offset.Y) / _curZoom + 0.5f),
+                (int)(screenRect.Width / _curZoom + 0.5f),
+                (int)(screenRect.Height / _curZoom + 0.5f)
+            );
+        }
+
+        private Rectangle VirtualToScreen(Rectangle virtualRect)
+        {
+            PointF offset = GetScreenOffset();
+            return new Rectangle(
+                (int)(virtualRect.X * _curZoom + offset.X + 0.5f),
+                (int)(virtualRect.Y * _curZoom + offset.Y + 0.5f),
+                (int)(virtualRect.Width * _curZoom + 0.5f),
+                (int)(virtualRect.Height * _curZoom + 0.5f));
+        } */
+
+        private PointF ScreenToVirtual(PointF screenPos)
+        {
+            PointF offset = GetScreenOffset();
+            return new PointF(
+                (screenPos.X - offset.X) / _curZoom,
+                (screenPos.Y - offset.Y) / _curZoom);
+        }
+
+        private PointF VirtualToScreen(PointF virtualPos)
+        {
+            PointF offset = GetScreenOffset();
+            return new PointF(
+                virtualPos.X * _curZoom + offset.X,
+                virtualPos.Y * _curZoom + offset.Y);
+        }
+
+
+        private void ImageViewControl_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if(e.Delta < 0)
+                ZoomMove(_curZoom / _zoomFactor, e.Location);
+            else
+                ZoomMove(_curZoom * _zoomFactor, e.Location);
+
+            if(_bitmapImage != null)
+            {
+                ImageRect.Width = _bitmapImage.Width * _curZoom;
+                ImageRect.Height = _bitmapImage.Height * _curZoom;
+            }
+            
+            Invalidate();
+        }
+
+        private void ZoomMove(float zoom, Point zoomOrigin)
+        {
+            PointF virtualOrigin = ScreenToVirtual(new PointF(zoomOrigin.X, zoomOrigin.Y));
+
+            _curZoom = Math.Max(MinZoom, Math.Min(MaxZoom, zoom));
+            if(_curZoom <= MinZoom) return;
+
+            PointF zoomedOrigin = VirtualToScreen(virtualOrigin);
+
+            float dx = zoomedOrigin.X - zoomOrigin.X;
+            float dy = zoomedOrigin.Y - zoomOrigin.Y;
+
+            ImageRect.X -= dx;
+            ImageRect.Y -= dy;
+        }
     }
 }

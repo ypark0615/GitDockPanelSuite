@@ -41,20 +41,20 @@ namespace GitDockPanelSuite
             camerWindow.Show(_dockPanel, DockState.Document);
 
             //검사 결과창 30% 비율로 추가
-            var resultWindow = new ResultForm();
-            resultWindow.Show(camerWindow.Pane, DockAlignment.Bottom, 0.3);
+            //ResultForm resultWindow = new ResultForm();
+            //resultWindow.Show(camerWindow.Pane, DockAlignment.Bottom, 0.3);
 
             //속성 창 추가
             var propWindow = new PropertiesForm();
             propWindow.Show(_dockPanel, DockState.DockRight);
 
-            //속성창과 같은 탭에 추가하기
+            /*//속성창과 같은 탭에 추가하기
             var statisticWindow = new StatisticForm();
             statisticWindow.Show(_dockPanel, DockState.DockRight);
 
             //로그창 50% 비율로 추가
             var logWindow = new LogForm();
-            logWindow.Show(propWindow.Pane, DockAlignment.Bottom, 0.5);
+            logWindow.Show(propWindow.Pane, DockAlignment.Bottom, 0.5);*/
         }
 
         //제네릭 함수 사용를 이용해 입력된 타입의 폼 객체 얻기

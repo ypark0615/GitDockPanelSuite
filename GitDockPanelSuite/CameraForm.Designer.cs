@@ -47,6 +47,7 @@
             this.Controls.Add(this.ImageViewer);
             this.Name = "CameraForm";
             this.Text = "CameraForm";
+            this.Resize += new System.EventHandler(this.CameraForm_Resize);
             this.ResumeLayout(false);
 
         }

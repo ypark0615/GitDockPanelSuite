@@ -39,6 +39,7 @@
             // 
             // NameMenu
             // 
+            this.NameMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.NameMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.NameMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem});
