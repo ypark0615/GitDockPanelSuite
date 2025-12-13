@@ -44,6 +44,11 @@ namespace GitDockPanelSuite
             //DoubleBuffered = true;
         }
 
+        public Bitmap GetCurBitmap()
+        {
+            return _bitmapImage;
+        }
+
         private void ResizeCanvas()
         {
             if (Width <= 0 || Height <= 0 || _bitmapImage == null)

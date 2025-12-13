@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GitDockPanelSuite.Core;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -34,6 +35,27 @@ namespace GitDockPanelSuite
             ImageViewer.Height = this.Height - margin * 2;
 
             ImageViewer.Location = new System.Drawing.Point(margin, margin);
+        }
+
+        public void UpdateDisplay(Bitmap bitmap = null)
+        {
+            if(bitmap == null)
+            {
+                bitmap = Global.Inst.InspStage.GetBitmap();
+                if (bitmap == null) return;
+            }
+
+            if(ImageViewer != null)
+                ImageViewer.LoadBitmap(bitmap);
+        }
+        public Bitmap GetDisplayImage()
+        {
+            Bitmap curImage = null;
+
+            if (ImageViewer != null)
+                curImage = ImageViewer.GetCurBitmap();
+
+            return curImage;
         }
     }
 }
