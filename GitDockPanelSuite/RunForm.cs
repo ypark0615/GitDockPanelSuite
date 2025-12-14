@@ -21,6 +21,7 @@ namespace GitDockPanelSuite
 
         private void btnGrab_Click(object sender, EventArgs e)
         {
+            var dd = new Global();
             Global.Inst.InspStage.Grab(0);
         }
     }
