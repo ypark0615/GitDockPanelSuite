@@ -42,7 +42,7 @@ namespace GitDockPanelSuite.Core
 
         private InspStage _stage = new InspStage();
 
-        public InspStage InspStage // InspStage를 제어해줄 
+        public InspStage InspStage
         {
             get { return _stage; }
         }

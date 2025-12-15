@@ -8,21 +8,21 @@ using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Core
 {
-    public class InspStage : IDisposable
+    public class InspStage : IDisposable // 검사 스테이지(Inspection Stage)
     {
-        public static readonly int MAX_GRAB_BUF = 5;
+        public static readonly int MAX_GRAB_BUF = 5; // 전역적으로 공유되는 최대 Grab 버퍼 수
 
-        private ImageSpace _imageSpace = null;
-        private HikRobotCam _grabManager = null;
-        SaigeAI _saigeAI;
+        private ImageSpace _imageSpace = null; // Grab된 원본 이미지 및 분할 이미지 관리
+        private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
+        SaigeAI _saigeAI; // AI 모듈
 
         public InspStage() { }
-        public ImageSpace ImageSpace
+        public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
         {
             get => _imageSpace;
         }
 
-        public SaigeAI AIModule
+        public SaigeAI AIModule // AI 모듈 접근 시 최초 1회 생성
         {
             get
             {
@@ -34,47 +34,48 @@ namespace GitDockPanelSuite.Core
 
         public bool Initialize()
         {
-            _imageSpace = new ImageSpace();
-            _grabManager = new HikRobotCam();
+            _imageSpace = new ImageSpace(); // ImageSpace 생성
+            _grabManager = new HikRobotCam(); // HikRobotCam 생성
 
-            if (_grabManager.InitGrab() == true)
+            if (_grabManager.InitGrab() == true) // Grab 초기화
             {
-                _grabManager.TransferCompleted += _multiGrab_TransferCompleted;
+                _grabManager.TransferCompleted += _multiGrab_TransferCompleted; // Grab 성공 시 이벤트 연결
             }
 
             return true;
         }
 
-        public void InitModelGrab(int bufferCount)
+        public void InitModelGrab(int bufferCount) // 버퍼 개수 설정
         {
-            if (_grabManager == null) return;
+            if (_grabManager == null) return; // GrabManager null 체크
 
-            int pixelBpp = 8;
-            _grabManager.GetPixelBpp(out pixelBpp);
+            int pixelBpp = 8; // Pixel BPP
+            _grabManager.GetPixelBpp(out pixelBpp); // 현재 이미지에서 Pixel BPP 받아오기
 
             int inspectionWidth;
             int inspectionHeight;
             int inspectStride;
-            _grabManager.GetResolution(out inspectionWidth, out inspectionHeight, out inspectStride);
+            _grabManager.GetResolution(out inspectionWidth, out inspectionHeight, out inspectStride); // 해상도/Stride 받아오기
 
             if (_imageSpace != null)
             {
+                // ImageSpace에 이미지 정보 설정
                 _imageSpace.SetImageInfo(pixelBpp, inspectionWidth, inspectionHeight, inspectStride);
             }
 
-            SetBuffer(bufferCount);
+            SetBuffer(bufferCount); // 버퍼 개수 설정
         }
 
         public void SetBuffer(int bufferCount)
         {
-            if (_grabManager == null) return;
+            if (_grabManager == null) return; // GrabManager null 체크
 
-            if (_imageSpace.BufferCount == bufferCount) return;
+            if (_imageSpace.BufferCount == bufferCount) return; // 현재 연결된 버퍼 수와 입력받은 버퍼 수가 동일하면 return
 
-            _imageSpace.InitImageSpace(bufferCount);
-            _grabManager.InitBuffer(bufferCount);
+            _imageSpace.InitImageSpace(bufferCount); // ImageSpace 버퍼 초기화
+            _grabManager.InitBuffer(bufferCount); // GrabManager 버퍼 초기화
 
-            for (int i = 0; i < bufferCount; i++)
+            for (int i = 0; i < bufferCount; i++) // 각 버퍼를 카메라에 바인딩
             {
                 _grabManager.SetBuffer(
                     _imageSpace.GetInspectionBuffer(i),
@@ -85,7 +86,7 @@ namespace GitDockPanelSuite.Core
             }
         }
 
-        public void Grab(int bufferIndex)
+        public void Grab(int bufferIndex) // 지정된 버퍼로 Grab 실행
         {
             if (_grabManager == null) return;
 
@@ -97,12 +98,11 @@ namespace GitDockPanelSuite.Core
             int bufferIndex = (int)e;
             Console.WriteLine($"_multiGrab_TransferCompleted {bufferIndex}");
 
-            _imageSpace.Split(bufferIndex);
-
-            DisplayGrabImage(bufferIndex);
+            _imageSpace.Split(bufferIndex); // Grab된 이미지 분할 처리
+            DisplayGrabImage(bufferIndex);  // 화면 갱신
         }
 
-        private void DisplayGrabImage(int bufferIndex)
+        private void DisplayGrabImage(int bufferIndex) // Grab한 이미지 띄우기
         {
             var cameraForm = Form1.GetDockForm<CameraForm>();
             if (cameraForm != null)
@@ -111,7 +111,7 @@ namespace GitDockPanelSuite.Core
             }
         }
 
-        public void UpdateDisplay(Bitmap bitmap)
+        public void UpdateDisplay(Bitmap bitmap) // 외부 Bitmap으로 화면 갱신
         {
             var cameraForm = Form1.GetDockForm<CameraForm>();
             if (cameraForm != null)
@@ -120,7 +120,7 @@ namespace GitDockPanelSuite.Core
             }
         }
 
-        public Bitmap GetCurrentImage()
+        public Bitmap GetCurrentImage() // 현재 화면에 표시 중인 이미지 반환
         {
             Bitmap bitmap = null;
             var cameraForm = Form1.GetDockForm<CameraForm>();
@@ -134,15 +134,15 @@ namespace GitDockPanelSuite.Core
 
         public Bitmap GetBitmap(int bufferIndex = -1)
         {
+            // Global을 통해 다시 InspStage → ImageSpace 접근
             if (Global.Inst.InspStage.ImageSpace is null)
                 return null;
 
             return Global.Inst.InspStage.ImageSpace.GetBitmap();
         }
 
-
         #region Disposable
-        private bool disposed = false;
+        private bool disposed = false; // Dispose 호출 여부
 
         protected virtual void Dispose(bool disposing)
         {
@@ -152,13 +152,13 @@ namespace GitDockPanelSuite.Core
                 {
                     if (_saigeAI != null)
                     {
-                        _saigeAI.Dispose();
+                        _saigeAI.Dispose(); // AI 모듈 해제
                         _saigeAI = null;
                     }
 
                     if (_grabManager != null)
                     {
-                        _grabManager.Dispose();
+                        _grabManager.Dispose(); // 카메라 Grab 리소스 해제
                         _grabManager = null;
                     }
                 }
