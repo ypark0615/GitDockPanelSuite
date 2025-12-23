@@ -15,7 +15,8 @@ namespace GitDockPanelSuite
     public enum PropertyType
     {
         Binary,
-        Filter
+        Filter,
+        AIModule
     }
 
     //public partial class PropertiesForm : Form
@@ -29,6 +30,7 @@ namespace GitDockPanelSuite
 
             LoadOptionControl(PropertyType.Filter);
             LoadOptionControl(PropertyType.Binary);
+            LoadOptionControl(PropertyType.AIModule);
         }
 
         private void LoadOptionControl(PropertyType propType)
@@ -74,6 +76,10 @@ namespace GitDockPanelSuite
                 case PropertyType.Filter:
                     ImageFilterProp filterProp = new ImageFilterProp();
                     curProp = filterProp;
+                    break;
+                case PropertyType.AIModule:
+                    AIModuleProp AIModuleProp = new AIModuleProp();
+                    curProp = AIModuleProp;
                     break;
                 default:
                     MessageBox.Show("유효하지 않은 옵션입니다.");

@@ -44,13 +44,13 @@ namespace GitDockPanelSuite
             //ResultForm resultWindow = new ResultForm();
             //resultWindow.Show(camerWindow.Pane, DockAlignment.Bottom, 0.3);
 
-            var runWindow = new RunForm();
+            //var runWindow = new RunForm();
             //runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
-            runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
+            //runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
 
             //속성 창 추가
-            //var propWindow = new PropertiesForm();
-            //propWindow.Show(_dockPanel, DockState.DockRight);
+            var propWindow = new PropertiesForm();
+            propWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
 
             /*//속성창과 같은 탭에 추가하기
             var statisticWindow = new StatisticForm();
