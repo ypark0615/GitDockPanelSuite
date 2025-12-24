@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitDockPanelSuite.Core;
 using WeifenLuo.WinFormsUI.Docking;
 //using WeifenLuo.WinFormsUI.Docking.VisualStyles; // 이전 방식. 현재에선 사용하지 않음
 
@@ -44,8 +45,8 @@ namespace GitDockPanelSuite
             //ResultForm resultWindow = new ResultForm();
             //resultWindow.Show(camerWindow.Pane, DockAlignment.Bottom, 0.3);
 
-            //var runWindow = new RunForm();
-            //runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
+            var runWindow = new RunForm();
+            runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
             //runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
 
             //속성 창 추가

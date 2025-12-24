@@ -115,7 +115,9 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Grab\GrabModel.cs" />
     <Compile Include="Grab\HikRobotCam.cs" />
+    <Compile Include="Grab\WebCam.cs" />
     <Compile Include="inspect\SaigeAI.cs" />
     <Compile Include="Property\AIModuleProp.cs">
       <SubType>UserControl</SubType>

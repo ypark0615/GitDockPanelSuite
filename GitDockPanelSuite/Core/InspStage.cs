@@ -13,7 +13,9 @@ namespace GitDockPanelSuite.Core
         public static readonly int MAX_GRAB_BUF = 5; // 전역적으로 공유되는 최대 Grab 버퍼 수
 
         private ImageSpace _imageSpace = null; // Grab된 원본 이미지 및 분할 이미지 관리
-        private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
+        //private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
+        private GrabModel _grabManager = null;
+        public CameraType _camType = CameraType.None;
         SaigeAI _saigeAI; // AI 모듈
 
         public InspStage() { }
@@ -35,11 +37,31 @@ namespace GitDockPanelSuite.Core
         public bool Initialize()
         {
             _imageSpace = new ImageSpace(); // ImageSpace 생성
-            _grabManager = new HikRobotCam(); // HikRobotCam 생성
 
-            if (_grabManager.InitGrab() == true) // Grab 초기화
+            Global.Inst.InspStage.Dispose();
+
+            _grabManager = null;
+
+            switch (_camType)
+            {
+                case CameraType.WebCam:
+                    {
+                        _grabManager = new WebCam(); // WebCam 생성
+                        break;
+                    }
+                case CameraType.HikRobotCam:
+                    {
+                        _grabManager = new HikRobotCam(); // HikRobotCam 생성
+                        break;
+                    }
+            }
+
+
+            if (_grabManager != null && _grabManager.InitGrab() == true) // Grab 초기화
             {
                 _grabManager.TransferCompleted += _multiGrab_TransferCompleted; // Grab 성공 시 이벤트 연결
+
+                InitModelGrab(MAX_GRAB_BUF);
             }
 
             return true;

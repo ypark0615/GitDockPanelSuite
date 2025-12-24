@@ -1,4 +1,5 @@
-﻿using MvCamCtrl.NET;
+﻿using GitDockPanelSuite.Core;
+using MvCamCtrl.NET;
 using MvCameraControl;
 using System;
 using System.Collections.Generic;
@@ -10,43 +11,9 @@ using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Grab
 {
-    struct GrabUserBuffer
+
+    internal class HikRobotCam : GrabModel
     {
-        private byte[] _imageBuffer;
-        private IntPtr _imageBufferPtr;
-        private GCHandle _imageHandle;
-
-        public byte[] ImageBuffer
-        {
-            get { return _imageBuffer; }
-            set { _imageBuffer = value; }
-        }
-
-        public IntPtr ImageBufferPtr
-        {
-            get { return _imageBufferPtr; }
-            set { _imageBufferPtr = value; }
-        }
-
-        public GCHandle ImageHandle
-        {
-            get { return _imageHandle; }
-            set { _imageHandle = value; }
-        }
-    }
-
-    internal class HikRobotCam : IDisposable
-    {
-        public delegate void GrabEventHandler<T>(object sender, T obj = null) where T : class;
-
-        public event GrabEventHandler<object> GrabCompleted;
-        public event GrabEventHandler<object> TransferCompleted;
-
-        protected GrabUserBuffer[] _userImageBuffer = null;
-        public int BufferIndex {get; set;} = 0;
-
-        internal bool HardwareTrigger { get; set; } = false;
-        internal bool IncreaseBufferIndex { get; set; } = false;
 
         private IDevice _device = null;
 
@@ -99,9 +66,7 @@ namespace GitDockPanelSuite.Grab
             }
         }
 
-        private string _strIpAddr = "";
-
-        internal bool Create(string strIpAddr = null)
+        internal override bool Create(string strIpAddr = null)
         {
             SDKSystem.Initialize();
 
@@ -174,33 +139,8 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool InitGrab()
-        {
-            if(!Create()) return false;
 
-            if(!Open()) return false;
-
-            return true;
-        }
-
-        internal bool InitBuffer(int bufferCount = 1)
-        {
-            if(bufferCount < 0) return false;
-
-            _userImageBuffer = new GrabUserBuffer[bufferCount];
-            return true;
-        }
-
-        internal bool SetBuffer(byte[] buffer, IntPtr bufferPtr, GCHandle bufferHandle, int bufferIndex = 0)
-        {
-            _userImageBuffer[bufferIndex].ImageBuffer = buffer;
-            _userImageBuffer[bufferIndex].ImageBufferPtr = bufferPtr;
-            _userImageBuffer[bufferIndex].ImageHandle = bufferHandle;
-
-            return true;
-        }
-
-        internal bool Grab(int bufferIndex, bool waitDone)
+        internal override bool Grab(int bufferIndex, bool waitDone)
         {
             if(_device == null) return false;
 
@@ -226,7 +166,7 @@ namespace GitDockPanelSuite.Grab
             return ret;
         }
 
-        internal bool Close()
+        internal override bool Close()
         {
             if(_device != null)
             {
@@ -234,10 +174,12 @@ namespace GitDockPanelSuite.Grab
                 _device.Close();
             }
 
+            _device = null;
+
             return true;
         }
 
-        internal bool Open()
+        internal override bool Open()
         {
             try
             {
@@ -305,7 +247,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool Reconnect()
+        internal override bool Reconnect()
         {
             if(_device == null)
             {
@@ -317,7 +259,7 @@ namespace GitDockPanelSuite.Grab
             return Open();
         }
 
-        internal bool GetPixelBpp(out int pixelBpp)
+        internal override bool GetPixelBpp(out int pixelBpp)
         {
             pixelBpp = 8;
             if(_device == null) return false;
@@ -338,17 +280,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        protected void OnGrabCompleted(object obj = null)
-        {
-            GrabCompleted?.Invoke(this, obj);
-        }
-
-        protected void OnTransferCompleted(object obj = null)
-        {
-            TransferCompleted?.Invoke(this, obj);
-        }
-
-        internal bool SetExposureTime(long exposure)
+        internal override bool SetExposureTime(long exposure)
         {
             if(_device == null) return false;
 
@@ -363,7 +295,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool GetExposureTime(out long exposure)
+        internal override bool GetExposureTime(out long exposure)
         {
             exposure = 0;
             if(_device == null) return false;
@@ -378,7 +310,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool SetGain(long gain)
+        internal override bool SetGain(float gain)
         {
             if(_device == null) return false;
 
@@ -393,7 +325,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool GetGain(out long gain)
+        internal override bool GetGain(out float gain)
         {
             gain = 0;
             if(_device == null) return false;
@@ -408,7 +340,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool GetResolution(out int width, out int height, out int stirde)
+        internal override bool GetResolution(out int width, out int height, out int stirde)
         {
             width = 0;
             height = 0;
@@ -455,7 +387,7 @@ namespace GitDockPanelSuite.Grab
             return true;
         }
 
-        internal bool SetTriggerMode(bool hardwareTrigger)
+        internal override bool SetTriggerMode(bool hardwareTrigger)
         {
             if(_device == null) return false;
 
@@ -489,7 +421,7 @@ namespace GitDockPanelSuite.Grab
             _disposed = true;
         }
 
-        public void Dispose()
+        internal override void Dispose()
         {
             Dispose(disposing: true);
         }
