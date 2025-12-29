@@ -256,6 +256,7 @@ namespace GitDockPanelSuite.Grab
             }
 
             Close();
+            Create();
             return Open();
         }
 
