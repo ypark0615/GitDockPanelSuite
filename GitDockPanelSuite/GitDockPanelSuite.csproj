@@ -100,6 +100,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithm\BlobAlgorithm.cs" />
+    <Compile Include="Algorithm\InspAlgorithm.cs" />
     <Compile Include="CameraForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -109,11 +111,12 @@
     <Compile Include="Core\Global.cs" />
     <Compile Include="Core\ImageSpace.cs" />
     <Compile Include="Core\InspStage.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="Core\PreviewImage.cs" />
+    <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Grab\GrabModel.cs" />
     <Compile Include="Grab\HikRobotCam.cs" />
@@ -175,12 +178,18 @@
     <Compile Include="StatisticForm.Designer.cs">
       <DependentUpon>StatisticForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UIControl\RangeTrackbar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIControl\RangeTrackbar.Designer.cs">
+      <DependentUpon>RangeTrackbar.cs</DependentUpon>
+    </Compile>
     <Compile Include="util\BitmapExtension.cs" />
     <EmbeddedResource Include="CameraForm.resx">
       <DependentUpon>CameraForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PropertiesForm.resx">
       <DependentUpon>PropertiesForm.cs</DependentUpon>

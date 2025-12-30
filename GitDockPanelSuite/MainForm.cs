@@ -13,10 +13,10 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace GitDockPanelSuite
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         private static DockPanel _dockPanel;
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 

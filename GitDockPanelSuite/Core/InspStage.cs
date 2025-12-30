@@ -1,10 +1,12 @@
-﻿using GitDockPanelSuite.Grab;
+﻿using GitDockPanelSuite.Algorithm;
+using GitDockPanelSuite.Grab;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using OpenCvSharp;
 
 namespace GitDockPanelSuite.Core
 {
@@ -17,6 +19,9 @@ namespace GitDockPanelSuite.Core
         private GrabModel _grabManager = null;
         public CameraType _camType = CameraType.None;
         SaigeAI _saigeAI; // AI 모듈
+
+        BlobAlgorithm _blobAlgorithm = null; // 블롭 알고리즘 인스턴스
+        private PreviewImage _previewImage = null; // 미리보기 이미지 변수
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -34,11 +39,22 @@ namespace GitDockPanelSuite.Core
             }
         }
 
+        public BlobAlgorithm BlobAlgorithm
+        {
+            get => _blobAlgorithm;
+        }
+
+        public PreviewImage PreView
+        {
+            get => _previewImage;
+        }
+
         public bool Initialize()
         {
             _imageSpace = new ImageSpace(); // ImageSpace 생성
 
-            Global.Inst.InspStage.Dispose();
+            _blobAlgorithm = new BlobAlgorithm(); // BlobAlgorithm 생성
+            _previewImage = new PreviewImage(); // PreviewImage 생성
 
             _grabManager = null;
 
@@ -86,6 +102,21 @@ namespace GitDockPanelSuite.Core
             }
 
             SetBuffer(bufferCount); // 버퍼 개수 설정
+
+
+            UpdateProperty();
+        }
+
+        public void UpdateProperty()
+        {
+            if (BlobAlgorithm is null)
+                return;
+
+            PropertiesForm propertiesForm = MainForm.GetDockForm<PropertiesForm>();
+            if (propertiesForm is null)
+                return;
+
+            propertiesForm.UpdateProperty(BlobAlgorithm);
         }
 
         public void SetBuffer(int bufferCount)
@@ -126,7 +157,7 @@ namespace GitDockPanelSuite.Core
 
         private void DisplayGrabImage(int bufferIndex) // Grab한 이미지 띄우기
         {
-            var cameraForm = Form1.GetDockForm<CameraForm>();
+            var cameraForm = MainForm.GetDockForm<CameraForm>();
             if (cameraForm != null)
             {
                 cameraForm.UpdateDisplay();
@@ -135,7 +166,7 @@ namespace GitDockPanelSuite.Core
 
         public void UpdateDisplay(Bitmap bitmap) // 외부 Bitmap으로 화면 갱신
         {
-            var cameraForm = Form1.GetDockForm<CameraForm>();
+            var cameraForm = MainForm.GetDockForm<CameraForm>();
             if (cameraForm != null)
             {
                 cameraForm.UpdateDisplay(bitmap);
@@ -145,7 +176,7 @@ namespace GitDockPanelSuite.Core
         public Bitmap GetCurrentImage() // 현재 화면에 표시 중인 이미지 반환
         {
             Bitmap bitmap = null;
-            var cameraForm = Form1.GetDockForm<CameraForm>();
+            var cameraForm = MainForm.GetDockForm<CameraForm>();
             if (cameraForm != null)
             {
                 bitmap = cameraForm.GetDisplayImage();
@@ -161,6 +192,20 @@ namespace GitDockPanelSuite.Core
                 return null;
 
             return Global.Inst.InspStage.ImageSpace.GetBitmap();
+        }
+
+        public Mat GetMat()
+        {
+            return Global.Inst.InspStage.ImageSpace.GetMat();
+        }
+
+        public void RedrawMainView()
+        {
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+            {
+                cameraForm.UpdateImageViewer();
+            }
         }
 
         #region Disposable

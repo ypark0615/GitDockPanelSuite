@@ -15,6 +15,11 @@
         {
             if (disposing && (components != null))
             {
+                if(binRangeTrackbar != null)
+                {
+                    binRangeTrackbar.RangeChanged -= Range_RangeChanged;
+                }
+
                 components.Dispose();
             }
             base.Dispose(disposing);
@@ -28,29 +33,84 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.grpBinary = new System.Windows.Forms.GroupBox();
+            this.cbHighlight = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.binRangeTrackbar = new GitDockPanelSuite.UIControl.RangeTrackbar();
+            this.chkUse = new System.Windows.Forms.CheckBox();
+            this.grpBinary.SuspendLayout();
             this.SuspendLayout();
             // 
-            // comboBox1
+            // grpBinary
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Location = new System.Drawing.Point(14, 64);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 26);
-            this.comboBox1.TabIndex = 0;
+            this.grpBinary.Controls.Add(this.cbHighlight);
+            this.grpBinary.Controls.Add(this.label1);
+            this.grpBinary.Controls.Add(this.binRangeTrackbar);
+            this.grpBinary.Location = new System.Drawing.Point(13, 50);
+            this.grpBinary.Name = "grpBinary";
+            this.grpBinary.Size = new System.Drawing.Size(355, 132);
+            this.grpBinary.TabIndex = 4;
+            this.grpBinary.TabStop = false;
+            this.grpBinary.Text = "이진화";
+            // 
+            // cbHighlight
+            // 
+            this.cbHighlight.FormattingEnabled = true;
+            this.cbHighlight.Location = new System.Drawing.Point(117, 93);
+            this.cbHighlight.Name = "cbHighlight";
+            this.cbHighlight.Size = new System.Drawing.Size(232, 26);
+            this.cbHighlight.TabIndex = 6;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(3, 96);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(98, 18);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "하이라이트";
+            // 
+            // binRangeTrackbar
+            // 
+            this.binRangeTrackbar.BackColor = System.Drawing.Color.Transparent;
+            this.binRangeTrackbar.Location = new System.Drawing.Point(6, 13);
+            this.binRangeTrackbar.Name = "binRangeTrackbar";
+            this.binRangeTrackbar.Size = new System.Drawing.Size(343, 92);
+            this.binRangeTrackbar.TabIndex = 4;
+            this.binRangeTrackbar.ValueLeft = 80;
+            this.binRangeTrackbar.ValueRight = 200;
+            // 
+            // chkUse
+            // 
+            this.chkUse.AutoSize = true;
+            this.chkUse.Location = new System.Drawing.Point(19, 16);
+            this.chkUse.Name = "chkUse";
+            this.chkUse.Size = new System.Drawing.Size(70, 22);
+            this.chkUse.TabIndex = 7;
+            this.chkUse.Text = "검사";
+            this.chkUse.UseVisualStyleBackColor = true;
             // 
             // BinaryProp
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.comboBox1);
+            this.Controls.Add(this.chkUse);
+            this.Controls.Add(this.grpBinary);
             this.Name = "BinaryProp";
+            this.Size = new System.Drawing.Size(388, 304);
+            this.grpBinary.ResumeLayout(false);
+            this.grpBinary.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.GroupBox grpBinary;
+        private System.Windows.Forms.ComboBox cbHighlight;
+        private System.Windows.Forms.Label label1;
+        private UIControl.RangeTrackbar binRangeTrackbar;
+        private System.Windows.Forms.CheckBox chkUse;
     }
 }

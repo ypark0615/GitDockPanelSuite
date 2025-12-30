@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
+using OpenCvSharp;
 
 namespace GitDockPanelSuite
 {
@@ -47,6 +48,9 @@ namespace GitDockPanelSuite
 
             if(ImageViewer != null)
                 ImageViewer.LoadBitmap(bitmap); // ImageViewer가 존재할 경우 Bitmap을 로드하여 화면 갱신
+        
+            Mat curImage = Global.Inst.InspStage.GetMat();
+            Global.Inst.InspStage.PreView.SetImage(curImage);
         }
         public Bitmap GetDisplayImage()
         {
@@ -56,6 +60,11 @@ namespace GitDockPanelSuite
                 curImage = ImageViewer.GetCurBitmap(); // 현재 화면에 표시 중인 Bitmap 반환
 
             return curImage;
+        }
+
+        public void UpdateImageViewer()
+        {
+            ImageViewer.Invalidate(); // ImageViewer 컨트롤을 무효화하여 다시 그리도록 요청
         }
     }
 }
