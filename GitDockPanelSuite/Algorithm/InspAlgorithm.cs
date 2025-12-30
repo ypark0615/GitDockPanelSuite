@@ -22,11 +22,20 @@ namespace GitDockPanelSuite.Algorithm
 
         public bool IsInspected { get; set; } = false;
 
+        public Rect TeachRect { get; set; } // 학습 영역
+
+        public Rect InspRect { get; set; } // 실제 검사 영역
+
         protected Mat _srcImage = null;
 
         public List<string> ResultString { get; set; } = new List<string>();
 
         public bool IsDefect { get; set; }
+
+        public virtual void SetInspData(Mat srcImage)
+        { // 검사에 필요한 데이터 설정
+            _srcImage = srcImage;
+        }
 
         public abstract bool DoInspect();
 
@@ -35,6 +44,13 @@ namespace GitDockPanelSuite.Algorithm
             IsInspected = false;
             IsDefect = false;
             ResultString.Clear();
+        }
+
+
+        public virtual int GetResultRect(out List<DrawInspectInfo> resultArea)
+        {
+            resultArea = null;
+            return 0;
         }
     }
 }

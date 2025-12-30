@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitDockPanelSuite.Algorithm;
+using GitDockPanelSuite.Core;
 
 namespace GitDockPanelSuite
 {
@@ -26,6 +28,8 @@ namespace GitDockPanelSuite
 
         private float MinZoom = 1.0f; // 최소 줌 레벨
         private float MaxZoom = 100.0f; // 최대 줌 레벨
+
+        private List<DrawInspectInfo> _rectInfos = new List<DrawInspectInfo>();
 
         private Rectangle _screenSelectedRect = Rectangle.Empty;
 
@@ -123,9 +127,52 @@ namespace GitDockPanelSuite
                     g.InterpolationMode = InterpolationMode.NearestNeighbor;
                     g.DrawImage(_bitmapImage, ImageRect);
 
-                    // DrawDiagram(g);
+                     DrawDiagram(g);
 
                     e.Graphics.DrawImage(Canvas, 0, 0); // 화면에 표시
+                }
+            }
+        }
+
+        public void DrawDiagram(Graphics g)
+        {
+            if(_rectInfos != null)
+            {
+                foreach(DrawInspectInfo rectInfo in _rectInfos)
+                {
+                    Color lineColor = Color.LightCoral;
+                    if(rectInfo.decision == DecisionType.Defect)
+                        lineColor = Color.Red;
+                    else if(rectInfo.decision == DecisionType.Good)
+                        lineColor = Color.LightGreen;
+
+                    Rectangle rect = new Rectangle(rectInfo.rect.X, rectInfo.rect.Y, rectInfo.rect.Width, rectInfo.rect.Height);
+                    Rectangle screenRect = VirtualToScreen(rect);
+
+                    using(Pen pen = new Pen(lineColor, 2))
+                    {
+                        if(rectInfo.UseRotatedRect)
+                        {
+                            PointF[] screenPoints = rectInfo.rotatedPoints.Select(p => VirtualToScreen(new PointF(p.X, p.Y))).ToArray();
+                            
+                            if(screenPoints.Length == 4)
+                            {
+                                for(int i=0; i<4; i++)
+                                {
+                                    g.DrawLine(pen, screenPoints[i], screenPoints[(i + 1) % 4]);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            g.DrawRectangle(pen, screenRect);
+                        }
+                    }
+
+                    if(rectInfo.info != "")
+                    {
+
+                    }
                 }
             }
         }
@@ -182,7 +229,7 @@ namespace GitDockPanelSuite
             return new PointF(ImageRect.X, ImageRect.Y);;
         }
 
-        /* private Rectangle ScreenToVirtual(Rectangle screenRect)
+        private Rectangle ScreenToVirtual(Rectangle screenRect)
         {
             PointF offset = GetScreenOffset();
             return new Rectangle(
@@ -201,7 +248,7 @@ namespace GitDockPanelSuite
                 (int)(virtualRect.Y * _curZoom + offset.Y + 0.5f),
                 (int)(virtualRect.Width * _curZoom + 0.5f),
                 (int)(virtualRect.Height * _curZoom + 0.5f));
-        } */
+        }
 
         private PointF ScreenToVirtual(PointF screenPos)
         {

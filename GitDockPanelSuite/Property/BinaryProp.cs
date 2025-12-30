@@ -30,9 +30,17 @@ namespace GitDockPanelSuite.Property
         public int LeftValue => binRangeTrackbar.ValueLeft; // getter를 줄인 람다식
         public int RightValue => binRangeTrackbar.ValueRight;
 
+        private bool _updateDataGridView = true;
+        private readonly int COL_USE = 1;
+        private readonly int COL_MIN = 2;
+        private readonly int COL_MAX = 3;
+
         public BinaryProp()
         {
             InitializeComponent();
+
+            cbBinMethod.DataSource = Enum.GetValues(typeof(BinaryMethod)).Cast<BinaryMethod>().ToList();
+            cbBinMethod.SelectedIndex = (int)BinaryMethod.Feature;
 
             binRangeTrackbar.RangeChanged += Range_RangeChanged;
 
@@ -47,9 +55,61 @@ namespace GitDockPanelSuite.Property
             cbHighlight.SelectedIndex = 0;
         }
 
+        private void InitializeFilterDataGridView()
+        {
+            dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                HeaderText = "필터명",
+                ReadOnly = true,
+                SortMode = DataGridViewColumnSortMode.NotSortable,
+                Width = 70
+            });
+
+            dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                HeaderText = "사용",
+                SortMode = DataGridViewColumnSortMode.NotSortable,
+                Width = 40
+            });
+
+            dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                HeaderText = "최소값",
+                SortMode = DataGridViewColumnSortMode.NotSortable,
+                Width = 65
+            });
+
+            dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
+            {
+                HeaderText = "최대값",
+                SortMode = DataGridViewColumnSortMode.NotSortable,
+                Width = 65
+            });
+
+            AddFilterRow("Area");
+            AddFilterRow("Length");
+            AddFilterRow("Width");
+            AddFilterRow("Count");
+
+            dataGridViewFilter.AllowUserToAddRows = false;
+            dataGridViewFilter.RowHeadersVisible = false;
+            dataGridViewFilter.AllowUserToResizeColumns = false;
+            dataGridViewFilter.AllowUserToResizeRows = false;
+            dataGridViewFilter.AllowUserToOrderColumns = false;
+            dataGridViewFilter.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        }
+
+        private void AddFilterRow(string itemName)
+        {
+            dataGridViewFilter.Rows.Add(itemName, false, "", "");
+        }
+
         public void SetAlgorithm(BlobAlgorithm blobAlgo)
         {
             _blobAlgo = blobAlgo;
+
+            if (_blobAlgo.BlobFilters.Count <= 0)
+                blobAlgo.SetDefault();
 
             SetProperty();
         }
@@ -60,12 +120,17 @@ namespace GitDockPanelSuite.Property
 
             chkUse.Checked = _blobAlgo.IsUse;
 
-            BinaryThreshold threshold = _blobAlgo.BinaryThreshold;
+            BinaryThreshold threshold = _blobAlgo.BinThreshold;
 
             if (threshold.invert)
                 binRangeTrackbar.SetThreshold(threshold.upper, threshold.lower);
             else
                 binRangeTrackbar.SetThreshold(threshold.lower, threshold.upper);
+
+            cbBinMethod.SelectedIndex = (int)_blobAlgo.BinMethod;
+
+            UpdateDataGridView(true);
+            chkRotatedRect.Checked = _blobAlgo.UseRotatedRect;
         }
 
         public void GetProperty()
@@ -92,7 +157,55 @@ namespace GitDockPanelSuite.Property
                 threshold.invert = true;
             }
 
-            _blobAlgo.BinaryThreshold = threshold;
+            _blobAlgo.BinThreshold = threshold;
+
+            UpdateDataGridView(false);
+        }
+
+        private void UpdateDataGridView(bool update)
+        {
+            if (_blobAlgo is null) return;
+
+            if (update)
+            {
+                _updateDataGridView = false;
+                List<BlobFilter> blobFilters = _blobAlgo.BlobFilters;
+
+                for(int i=0; i<blobFilters.Count; i++)
+                {
+                    if (i >= dataGridViewFilter.Rows.Count) break;
+
+                    dataGridViewFilter.Rows[i].Cells[COL_USE].Value = blobFilters[i].isUse;
+                    dataGridViewFilter.Rows[i].Cells[COL_MIN].Value = blobFilters[i].min;
+                    dataGridViewFilter.Rows[i].Cells[COL_MAX].Value = blobFilters[i].max;
+                }
+
+                _updateDataGridView = true;
+            }
+            else
+            {
+                if (!_updateDataGridView) return;
+            
+                List<BlobFilter> blobFilters = _blobAlgo.BlobFilters;
+
+                for(int i = 0; i < blobFilters.Count; i++)
+                {
+                    BlobFilter blobFilter = blobFilters[i];
+                    blobFilter.isUse = (bool)dataGridViewFilter.Rows[i].Cells[COL_USE].Value;
+
+                    object value = dataGridViewFilter.Rows[i].Cells[COL_MIN].Value;
+
+                    int min = 0;
+                    if(value != null && int.TryParse(value.ToString(), out min))
+                        blobFilter.min = min;
+
+                    value = dataGridViewFilter.Rows[i].Cells[COL_MAX].Value;
+
+                    int max = 0;
+                    if (value != null && int.TryParse(value.ToString(), out max))
+                        blobFilter.max = max;
+                }
+            }
         }
 
         private void UpdateBinary()
@@ -124,6 +237,8 @@ namespace GitDockPanelSuite.Property
             bool useBinary = chkUse.Checked;
             grpBinary.Enabled = useBinary;
 
+            dataGridViewFilter.Enabled = useBinary;
+
             GetProperty();
         }
 
@@ -132,6 +247,50 @@ namespace GitDockPanelSuite.Property
             UpdateBinary();
         }
 
+
+        private void dataGridViewFilter_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if(_updateDataGridView)
+                UpdateDataGridView(false);
+        }
+
+        private void dataGridViewFilter_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewFilter.CurrentCell is DataGridViewCheckBoxCell)
+            {
+                dataGridViewFilter.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+        }
+
+        private void chkRotatedRect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (_blobAlgo is null) return;
+
+            _blobAlgo.UseRotatedRect = chkRotatedRect.Checked;
+        }
+
+        private void cbBinMethod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_blobAlgo is null) return;
+
+            _blobAlgo.BinMethod = (BinaryMethod)cbBinMethod.SelectedIndex;
+            chkRotatedRect.Enabled = _blobAlgo.BinMethod == BinaryMethod.Feature; // 왜 ==이 있는가?
+
+            if (_blobAlgo.BinMethod == BinaryMethod.PixelCount)
+            {
+                for (int i = 0; i < dataGridViewFilter.Rows.Count; i++)
+                {
+                    bool useFeature = j == 0 ? true : false;
+                    dataGridViewFilter.Rows[i].Cells[COL_USE].Value = useFeature;
+                }
+            }
+            else
+            {
+                dataGridViewFilter.Columns[COL_USE].ReadOnly = false;
+            }
+
+            _updateDataGridView = true;
+        }
 
         public class RangeChangedEventArgs : EventArgs
         {
