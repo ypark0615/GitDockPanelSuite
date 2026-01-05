@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenCvSharp;
+using OpenCvSharp.Extensions;
+using GitDockPanelSuite.Setting;
 
 namespace GitDockPanelSuite.Core
 {
@@ -17,11 +19,13 @@ namespace GitDockPanelSuite.Core
         private ImageSpace _imageSpace = null; // Grab된 원본 이미지 및 분할 이미지 관리
         //private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
         private GrabModel _grabManager = null;
-        public CameraType _camType = CameraType.None;
+        public CameraType _camType = CameraType.WebCam;
         SaigeAI _saigeAI; // AI 모듈
 
         BlobAlgorithm _blobAlgorithm = null; // 블롭 알고리즘 인스턴스
         private PreviewImage _previewImage = null; // 미리보기 이미지 변수
+
+        public bool LiveMode { get; set; } = false; // 라이브 모드 여부
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -58,6 +62,8 @@ namespace GitDockPanelSuite.Core
 
             _grabManager = null;
 
+            LoadSetting();
+
             switch (_camType)
             {
                 case CameraType.WebCam:
@@ -81,6 +87,12 @@ namespace GitDockPanelSuite.Core
             }
 
             return true;
+        }
+
+        private void LoadSetting()
+        {
+            //카메라 설정 타입 얻기
+            _camType = SettingXml.Inst.CamType;
         }
 
         public void InitModelGrab(int bufferCount) // 버퍼 개수 설정
@@ -139,6 +151,43 @@ namespace GitDockPanelSuite.Core
             }
         }
 
+
+        public void TryInspection()
+        {
+            if (_blobAlgorithm is null)
+                return;
+
+            Mat srcImage = Global.Inst.InspStage.GetMat();
+            _blobAlgorithm.SetInspData(srcImage);
+
+            _blobAlgorithm.InspRect = new Rect(0, 0, srcImage.Width, srcImage.Height);
+
+            if (_blobAlgorithm.DoInspect())
+            {
+                DisplayResult();
+            }
+        }
+
+        private bool DisplayResult()
+        {
+            if (_blobAlgorithm is null)
+                return false;
+
+            List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
+            int resultCnt = _blobAlgorithm.GetResultRect(out resultArea);
+            if (resultCnt > 0)
+            {
+                var cameraForm = MainForm.GetDockForm<CameraForm>();
+                if (cameraForm != null)
+                {
+                    cameraForm.ResetDisplay();
+                    cameraForm.AddRect(resultArea);
+                }
+            }
+
+            return true;
+        }
+
         public void Grab(int bufferIndex) // 지정된 버퍼로 Grab 실행
         {
             if (_grabManager == null) return;
@@ -146,13 +195,25 @@ namespace GitDockPanelSuite.Core
             _grabManager.Grab(bufferIndex, true);
         }
 
-        private void _multiGrab_TransferCompleted(object sender, object e)
+        private async void _multiGrab_TransferCompleted(object sender, object e)
         {
             int bufferIndex = (int)e;
             Console.WriteLine($"_multiGrab_TransferCompleted {bufferIndex}");
 
             _imageSpace.Split(bufferIndex); // Grab된 이미지 분할 처리
             DisplayGrabImage(bufferIndex);  // 화면 갱신
+
+            if (_previewImage != null)
+            {
+                Bitmap bitmap = ImageSpace.GetBitmap(0);
+                _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
+            }
+
+            if(LiveMode)
+            {
+                await Task.Delay(100);
+                _grabManager.Grab(bufferIndex, true);
+            }
         }
 
         private void DisplayGrabImage(int bufferIndex) // Grab한 이미지 띄우기

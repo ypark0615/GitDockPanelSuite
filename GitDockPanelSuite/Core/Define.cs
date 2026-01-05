@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Core
 {
+    public enum InspWindowType
+    {
+        None = 0,
+        Base,
+        Body,
+        Sub
+    }
+
     public enum DecisionType
     {
         None = 0,

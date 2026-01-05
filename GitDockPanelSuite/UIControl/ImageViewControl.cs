@@ -31,8 +31,6 @@ namespace GitDockPanelSuite
 
         private List<DrawInspectInfo> _rectInfos = new List<DrawInspectInfo>();
 
-        private Rectangle _screenSelectedRect = Rectangle.Empty;
-
         public ImageViewControl()
         {
             InitializeComponent();
@@ -169,14 +167,56 @@ namespace GitDockPanelSuite
                         }
                     }
 
-                    if(rectInfo.info != "")
+                    if (rectInfo.info != "")
                     {
+                        float baseFontSize = 20.0f;
 
+                        if (rectInfo.decision == DecisionType.Info)
+                        {
+                            baseFontSize = 3.0f;
+                            lineColor = Color.LightBlue;
+                        }
+
+                        float fontSize = baseFontSize * _curZoom;
+
+                        string infoText = rectInfo.info;
+                        PointF textPos = new PointF(screenRect.Left, screenRect.Top); // 위로 약간 띄우기
+
+                        if (rectInfo.inspectType == InspectType.InspBinary
+                            && rectInfo.decision != DecisionType.Info)
+                        {
+                            textPos.Y = screenRect.Bottom - fontSize;
+                        }
+
+                        DrawText(g, infoText, textPos, fontSize, lineColor);
                     }
                 }
             }
         }
 
+        private void DrawText(Graphics g, string text, PointF position, float fontSize, Color color)
+        {
+            using (Font font = new Font("Arial", fontSize, FontStyle.Bold))
+            // 테두리용 검정색 브러시
+            using (Brush outlineBrush = new SolidBrush(Color.Black))
+            // 본문용 노란색 브러시
+            using (Brush textBrush = new SolidBrush(color))
+            {
+                // 테두리 효과를 위해 주변 8방향으로 그리기
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        if (dx == 0 && dy == 0) continue; // 가운데는 제외
+                        PointF borderPos = new PointF(position.X + dx, position.Y + dy);
+                        g.DrawString(text, font, outlineBrush, borderPos);
+                    }
+                }
+
+                // 본문 텍스트
+                g.DrawString(text, font, textBrush, position);
+            }
+        }
 
         public void LoadBitmap(Bitmap bitmap)
         {
@@ -297,6 +337,17 @@ namespace GitDockPanelSuite
 
             ImageRect.X -= dx;
             ImageRect.Y -= dy;
+        }
+        public void AddRect(List<DrawInspectInfo> rectInfos)
+        {
+            _rectInfos.AddRange(rectInfos);
+            Invalidate();
+        }
+
+        public void ResetEntity()
+        {
+            _rectInfos.Clear();
+            Invalidate();
         }
     }
 }

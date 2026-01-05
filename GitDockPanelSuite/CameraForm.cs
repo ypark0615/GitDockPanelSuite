@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using OpenCvSharp;
+using GitDockPanelSuite.Algorithm;
 
 namespace GitDockPanelSuite
 {
@@ -65,6 +66,15 @@ namespace GitDockPanelSuite
         public void UpdateImageViewer()
         {
             ImageViewer.Invalidate(); // ImageViewer 컨트롤을 무효화하여 다시 그리도록 요청
+        }
+        public void ResetDisplay()
+        {
+            ImageViewer.ResetEntity();
+        }
+
+        public void AddRect(List<DrawInspectInfo> rectInfos)
+        {
+            ImageViewer.AddRect(rectInfos);
         }
     }
 }

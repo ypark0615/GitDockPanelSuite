@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitDockPanelSuite.Core;
+using GitDockPanelSuite.Setting;
 using WeifenLuo.WinFormsUI.Docking;
 //using WeifenLuo.WinFormsUI.Docking.VisualStyles; // 이전 방식. 현재에선 사용하지 않음
 
@@ -30,6 +31,8 @@ namespace GitDockPanelSuite
             _dockPanel.Theme = new VS2015BlueTheme();
 
             LoadDockingWindows();
+
+            Global.Inst.Initialize();
         }
 
         private void LoadDockingWindows()
@@ -85,6 +88,12 @@ namespace GitDockPanelSuite
                     cameraForm.LoadImage(openFileDialog.FileName);
                 }
             }
+        }
+
+        private void SetupMenuItem_Click(object sender, EventArgs e)
+        {
+            SetupForm setupForm = new SetupForm();
+            setupForm.ShowDialog();
         }
     }
 }

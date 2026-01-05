@@ -24,5 +24,20 @@ namespace GitDockPanelSuite
         {
             Global.Inst.InspStage.Grab(0);
         }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            Global.Inst.InspStage.TryInspection();
+        }
+
+        private void chkLive_CheckedChanged(object sender, EventArgs e)
+        {
+            Global.Inst.InspStage.LiveMode = chkLive.Checked;
+
+            if (Global.Inst.InspStage.LiveMode)
+            {
+                Global.Inst.InspStage.Grab(0);
+            }
+        }
     }
 }

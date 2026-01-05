@@ -42,6 +42,8 @@ namespace GitDockPanelSuite.Property
             cbBinMethod.DataSource = Enum.GetValues(typeof(BinaryMethod)).Cast<BinaryMethod>().ToList();
             cbBinMethod.SelectedIndex = (int)BinaryMethod.Feature;
 
+            InitializeFilterDataGridView();
+
             binRangeTrackbar.RangeChanged += Range_RangeChanged;
 
             binRangeTrackbar.ValueLeft = 0;
@@ -280,7 +282,7 @@ namespace GitDockPanelSuite.Property
             {
                 for (int i = 0; i < dataGridViewFilter.Rows.Count; i++)
                 {
-                    bool useFeature = j == 0 ? true : false;
+                    bool useFeature = (i == 0 ? true : false);
                     dataGridViewFilter.Rows[i].Cells[COL_USE].Value = useFeature;
                 }
             }
