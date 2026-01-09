@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.ImageViewer = new GitDockPanelSuite.ImageViewControl();
+            this.ImageViewer = new GitDockPanelSuite.ImageViewCtrl();
             this.SuspendLayout();
             // 
             // ImageViewer
@@ -54,6 +54,6 @@
 
         #endregion
 
-        private ImageViewControl ImageViewer;
+        private ImageViewCtrl ImageViewer;
     }
 }

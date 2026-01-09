@@ -2,7 +2,7 @@
 
 namespace GitDockPanelSuite
 {
-    partial class ImageViewControl
+    partial class ImageViewCtrl
     {
         /// <summary> 
         /// 필수 디자이너 변수입니다.
@@ -37,8 +37,8 @@ namespace GitDockPanelSuite
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Name = "ImageViewControl";
-            this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ImageViewControl_MouseDoubleClick);
-            this.Resize += new System.EventHandler(this.ImageViewControl_Resize);
+            this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ImageViewCtrl_MouseDoubleClick);
+            this.Resize += new System.EventHandler(this.ImageViewCtrl_Resize);
             this.ResumeLayout(false);
 
         }

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using OpenCvSharp;
 using OpenCvSharp.Extensions;
 using GitDockPanelSuite.Setting;
+using GitDockPanelSuite.Teach;
 
 namespace GitDockPanelSuite.Core
 {
@@ -25,7 +26,10 @@ namespace GitDockPanelSuite.Core
         BlobAlgorithm _blobAlgorithm = null; // 블롭 알고리즘 인스턴스
         private PreviewImage _previewImage = null; // 미리보기 이미지 변수
 
-        public bool LiveMode { get; set; } = false; // 라이브 모드 여부
+        private Model _model = null;
+
+        private InspWindow _selectedInspWindow = null;
+
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -53,14 +57,21 @@ namespace GitDockPanelSuite.Core
             get => _previewImage;
         }
 
+        public Model CurModel
+        {
+            get => _model;
+        }
+
+        public bool LiveMode { get; set; } = false; // 라이브 모드 여부
+
         public bool Initialize()
         {
             _imageSpace = new ImageSpace(); // ImageSpace 생성
 
-            _blobAlgorithm = new BlobAlgorithm(); // BlobAlgorithm 생성
+            //_blobAlgorithm = new BlobAlgorithm(); // BlobAlgorithm 생성
             _previewImage = new PreviewImage(); // PreviewImage 생성
 
-            _grabManager = null;
+            _model = new Model(); // Model 생성
 
             LoadSetting();
 
@@ -116,19 +127,19 @@ namespace GitDockPanelSuite.Core
             SetBuffer(bufferCount); // 버퍼 개수 설정
 
 
-            UpdateProperty();
+            //UpdateProperty();
         }
 
-        public void UpdateProperty()
+        public void UpdateProperty(InspWindow inspWindow)
         {
-            if (BlobAlgorithm is null)
+            if (inspWindow is null)
                 return;
 
             PropertiesForm propertiesForm = MainForm.GetDockForm<PropertiesForm>();
             if (propertiesForm is null)
                 return;
 
-            propertiesForm.UpdateProperty(BlobAlgorithm);
+            propertiesForm.UpdateProperty(inspWindow);
         }
 
         public void SetBuffer(int bufferCount)
@@ -152,23 +163,75 @@ namespace GitDockPanelSuite.Core
         }
 
 
-        public void TryInspection()
+        public void TryInspection(InspWindow inspWindow)
         {
-            if (_blobAlgorithm is null)
-                return;
-
-            Mat srcImage = Global.Inst.InspStage.GetMat();
-            _blobAlgorithm.SetInspData(srcImage);
-
-            _blobAlgorithm.InspRect = new Rect(0, 0, srcImage.Width, srcImage.Height);
-
-            if (_blobAlgorithm.DoInspect())
+            if (inspWindow is null)
             {
-                DisplayResult();
+                if (_selectedInspWindow is null)
+                    return;
+
+                inspWindow = _selectedInspWindow;
+            }
+
+            UpdateDiagramEntity();
+
+            List<DrawInspectInfo> totalArea = new List<DrawInspectInfo>();
+
+            Rect windowArea = inspWindow.WindowArea;
+
+            foreach (var inspAlgo in inspWindow.AlgorithmList)
+            {
+                inspAlgo.TeachRect = windowArea;
+                inspAlgo.InspRect = windowArea;
+
+                InspectType insptype = inspAlgo.InspectType;
+
+                switch (insptype)
+                {
+                    case InspectType.InspBinary:
+                        {
+                            BlobAlgorithm blobAlgo = (BlobAlgorithm)inspAlgo;
+
+                            Mat srcImage = Global.Inst.InspStage.GetMat();
+                            blobAlgo.SetInspData(srcImage);
+
+                            break;
+                        }
+                }
+
+                if (inspAlgo.DoInspect())
+                {
+                    List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
+                    int resultCnt = inspAlgo.GetResultRect(out resultArea);
+                    if (resultCnt > 0)
+                        totalArea.AddRange(resultArea);
+                }
             }
         }
 
-        private bool DisplayResult()
+        public void SelectInspWindow(InspWindow inspWindow)
+        {
+            _selectedInspWindow = inspWindow;
+
+            var propForm = MainForm.GetDockForm<PropertiesForm>();
+
+            if (propForm != null)
+            {
+                if (inspWindow is null)
+                {
+                    propForm.ResetProperty();
+                    return;
+                }
+
+                propForm.ShowProperty(inspWindow);
+            }
+
+            UpdateProperty(inspWindow);
+
+            Global.Inst.InspStage.PreView.SetInspWindow(inspWindow);
+        }
+
+        /*private bool DisplayResult()
         {
             if (_blobAlgorithm is null)
                 return false;
@@ -186,7 +249,7 @@ namespace GitDockPanelSuite.Core
             }
 
             return true;
-        }
+        }*/
 
         public void Grab(int bufferIndex) // 지정된 버퍼로 Grab 실행
         {
@@ -209,7 +272,7 @@ namespace GitDockPanelSuite.Core
                 _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
             }
 
-            if(LiveMode)
+            if (LiveMode)
             {
                 await Task.Delay(100);
                 _grabManager.Grab(bufferIndex, true);
@@ -258,6 +321,21 @@ namespace GitDockPanelSuite.Core
         public Mat GetMat()
         {
             return Global.Inst.InspStage.ImageSpace.GetMat();
+        }
+
+        public void UpdateDiagramEntity()
+        {
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+            {
+                cameraForm.UpdateDiagramEntity();
+            }
+
+            /*ModelTreeForm modelTreeForm = MainForm.GetDockForm<ModelTreeForm>();
+            if (modelTreeForm != null)
+            {
+                modelTreeForm.UpdateDiagramEntity();
+            }*/
         }
 
         public void RedrawMainView()

@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using OpenCvSharp;
 using GitDockPanelSuite.Algorithm;
+using GitDockPanelSuite.Teach;
 
 namespace GitDockPanelSuite
 {
@@ -37,6 +38,37 @@ namespace GitDockPanelSuite
             ImageViewer.Height = this.Height - margin * 2;
 
             ImageViewer.Location = new System.Drawing.Point(margin, margin);
+        }
+        public void UpdateDiagramEntity()
+        {
+            imageViewer.ResetEntity();
+
+            Model model = Global.Inst.InspStage.CurModel;
+            List<DiagramEntity> diagramEntityList = new List<DiagramEntity>();
+
+            foreach (InspWindow window in model.InspWindowList)
+            {
+                if (window is null)
+                    continue;
+
+                DiagramEntity entity = new DiagramEntity()
+                {
+                    LinkedWindow = window,
+                    EntityROI = new Rectangle(
+                        window.WindowArea.X, window.WindowArea.Y,
+                            window.WindowArea.Width, window.WindowArea.Height),
+                    EntityColor = imageViewer.GetWindowColor(window.InspWindowType),
+                    IsHold = window.IsTeach
+                };
+                diagramEntityList.Add(entity);
+            }
+
+            imageViewer.SetDiagramEntityList(diagramEntityList);
+        }
+
+        public void SelectDiagramEntity(InspWindow window)
+        {
+            imageViewer.SelectDiagramEntity(window);
         }
 
         public void UpdateDisplay(Bitmap bitmap = null)

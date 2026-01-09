@@ -1,6 +1,7 @@
 ﻿using GitDockPanelSuite.Algorithm;
 using GitDockPanelSuite.Core;
 using GitDockPanelSuite.Property;
+using GitDockPanelSuite.Teach;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -30,61 +31,64 @@ namespace GitDockPanelSuite
         public PropertiesForm()
         {
             InitializeComponent();
-
-            LoadOptionControl(PropertyType.Filter);
-            LoadOptionControl(PropertyType.Binary);
-            LoadOptionControl(PropertyType.AIModule);
         }
 
-        private void LoadOptionControl(PropertyType propType)
+        private void LoadOptionControl(InspectType inspType)
         {
-            string tabName = propType.ToString();
+            string tabName = inspType.ToString();
 
+            // 이미 있는 TabPage인지 확인
             foreach (TabPage tabPage in tabPropControl.TabPages)
             {
-                if (tabPage.Text == tabName) return;
+                if (tabPage.Text == tabName)
+                    return;
             }
 
+            // 딕셔너리에 있으면 추가
             if (_allTabs.TryGetValue(tabName, out TabPage page))
             {
                 tabPropControl.TabPages.Add(page);
                 return;
             }
 
-            UserControl _inspProp = CreateUserControl(propType);
-            if (_inspProp == null) return;
+            // 새로운 UserControl 생성
+            UserControl _inspProp = CreateUserControl(inspType);
+            if (_inspProp == null)
+                return;
 
+            // 새 탭 추가
             TabPage newTab = new TabPage(tabName)
             {
                 Dock = DockStyle.Fill
             };
-
             _inspProp.Dock = DockStyle.Fill;
             newTab.Controls.Add(_inspProp);
             tabPropControl.TabPages.Add(newTab);
-            tabPropControl.SelectedTab = newTab;
+            tabPropControl.SelectedTab = newTab; // 새 탭 선택
 
             _allTabs[tabName] = newTab;
         }
 
-        private UserControl CreateUserControl(PropertyType propType)
+        private UserControl CreateUserControl(InspectType inspPropType)
         {
             UserControl curProp = null;
-            switch (propType)
+            switch (inspPropType)
             {
-                case PropertyType.Binary:
+                case InspectType.InspBinary:
                     BinaryProp blobProp = new BinaryProp();
+
+                    //#7_BINARY_PREVIEW#8 이진화 속성 변경시 발생하는 이벤트 추가
                     blobProp.RangeChanged += RangeSlider_RangeChanged;
-                    blobProp.PropertyChanged += PropertyChanged;
+                    //blobProp.PropertyChanged += PropertyChanged;
                     curProp = blobProp;
                     break;
-                case PropertyType.Filter:
+                case InspectType.InspFilter:
                     ImageFilterProp filterProp = new ImageFilterProp();
                     curProp = filterProp;
                     break;
-                case PropertyType.AIModule:
-                    AIModuleProp AIModuleProp = new AIModuleProp();
-                    curProp = AIModuleProp;
+                case InspectType.InspAIModule:
+                    AIModuleProp aiModuleProp = new AIModuleProp();
+                    curProp = aiModuleProp;
                     break;
                 default:
                     MessageBox.Show("유효하지 않은 옵션입니다.");
@@ -93,9 +97,22 @@ namespace GitDockPanelSuite
             return curProp;
         }
 
-        public void UpdateProperty(BlobAlgorithm blobAlgorithm)
+        public void ShowProperty(InspWindow window)
         {
-            if (blobAlgorithm is null)
+            foreach (InspAlgorithm algo in window.AlgorithmList)
+            {
+                LoadOptionControl(algo.InspectType);
+            }
+        }
+
+        public void ResetProperty()
+        {
+            tabPropControl.TabPages.Clear();
+        }
+
+        public void UpdateProperty(InspWindow window)
+        {
+            if (window is null)
                 return;
 
             foreach (TabPage tabPage in tabPropControl.TabPages)
@@ -106,7 +123,11 @@ namespace GitDockPanelSuite
 
                     if (uc is BinaryProp binaryProp)
                     {
-                        binaryProp.SetAlgorithm(blobAlgorithm);
+                        BlobAlgorithm blobAlgo = (BlobAlgorithm)window.FindInspAlgorithm(InspectType.InspBinary);
+                        if (blobAlgo is null)
+                            continue;
+
+                        binaryProp.SetAlgorithm(blobAlgo);
                     }
                 }
             }

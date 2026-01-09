@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using OpenCvSharp;
 using System.Drawing;
 using OpenCvSharp.Extensions;
+using GitDockPanelSuite.Teach;
 
 namespace GitDockPanelSuite.Core
 {
@@ -14,6 +15,9 @@ namespace GitDockPanelSuite.Core
     {
         private Mat _originalImage = null;
         private Mat _previewImage = null;
+
+        private InspWindow _inspWindow = null;
+        
         private bool _userPreview = true;
 
         public void SetImage(Mat image)
@@ -21,6 +25,11 @@ namespace GitDockPanelSuite.Core
             _originalImage = image;
             _previewImage = new Mat();
         }
+        public void SetInspWindow(InspWindow inspwindow)
+        {
+            _inspWindow = inspwindow;
+        }
+
 
         public void SetBinary(int lowerValue, int upperValue, bool invert, ShowBinaryMode showBinMode)
         {
@@ -40,6 +49,11 @@ namespace GitDockPanelSuite.Core
             }
 
             Rect windowArea = new Rect(0, 0, _originalImage.Width, _originalImage.Height);
+
+            if (_inspWindow != null)
+            {
+                windowArea = _inspWindow.WindowArea;
+            }
 
             Mat orgRoi = _originalImage[windowArea];
 

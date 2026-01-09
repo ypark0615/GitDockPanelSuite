@@ -49,6 +49,18 @@ namespace GitDockPanelSuite.Teach
             return false;
         }
 
-        public 
+        public bool DelInspWindowList(List<InspWindow> inspWindowList)
+        {
+            int before = InspWindowList.Count;
+            InspWindowList.RemoveAll(w => inspWindowList.Contains(w));
+            return InspWindowList.Count < before;
+        }
+
+        public void CreateModel(string path, string modelName, string modelInfo)
+        {
+            ModelPath = path;
+            ModelName = modelName;
+            ModelInfo = modelInfo;
+        }
     }
 }
