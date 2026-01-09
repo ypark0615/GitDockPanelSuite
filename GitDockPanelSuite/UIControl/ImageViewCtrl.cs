@@ -51,14 +51,14 @@ namespace GitDockPanelSuite
 
         /* ROI 편집에 필요한 변수 선언 */
         private Point _roiStart = Point.Empty; // ROI 선택 시작 위치
-        private Rectangle _roiRect = Rectangle.Empty; // 현재 생성하거나 편집중인 ROI 영역
+        private Rectangle _roiRect = Rectangle.Empty; // 현재 생성중인 ROI 영역
         private bool _isSelectingRoi = false; // ROI 선택 중인지 여부
         private bool _isResizingRoi = false; // ROI 리사이즈 중인지 여부
         private bool _isMovingRoi = false; // ROI 이동 중인지 여부
         private Point _resizeStart = Point.Empty; // 리사이즈 시작 위치
         private Point _moveStart = Point.Empty; // 이동 시작 위치
-        private int _resizeDirection = -1; // 리사이즈 방향
-        private const int _ResizeHandleSize = 10; // 리사이즈 핸들 크기
+        private int _resizeDirection = -1; // 리사이즈 꼭짓점 위치                                 
+        private const int _ResizeHandleSize = 10; // 리사이즈 핸들(꼭짓점) 크기
 
         private InspWindowType _newRoiType = InspWindowType.None; // 새로 추가되는 ROI의 타입
 
@@ -89,7 +89,7 @@ namespace GitDockPanelSuite
 
             _contextMenu = new ContextMenuStrip();
             _contextMenu.Items.Add("Delete", null, OnDeleteClicked);
-            _contextMenu.Items.Add(new ToolStripSeparator());
+            _contextMenu.Items.Add(new ToolStripSeparator()); // 줄 구분자 추가
             _contextMenu.Items.Add("Teaching", null, OnTeachingClicked);
             _contextMenu.Items.Add("Unlock", null, OnUnlockClicked);
 
@@ -102,6 +102,33 @@ namespace GitDockPanelSuite
             ResizeCanvas();
 
             //DoubleBuffered = true;
+        }
+
+        public Color GetWindowColor(InspWindowType inspWindowType)
+        {
+            Color color = Color.AliceBlue;
+
+            switch(inspWindowType)
+            {
+                case InspWindowType.Base:
+                    color = Color.AliceBlue;
+                    break;
+                case InspWindowType.Sub:
+                    color = Color.Coral;
+                    break;
+                case InspWindowType.Body:
+                    color = Color.LemonChiffon;
+                    break;
+            }
+
+            return color;
+        }
+
+        public void NewRoi(InspWindowType inspWindowType)
+        {
+            _newRoiType = inspWindowType;
+            _selColor = GetWindowColor(inspWindowType);
+            Cursor = Cursors.Cross;
         }
 
         public Bitmap GetCurBitmap()
@@ -422,7 +449,9 @@ namespace GitDockPanelSuite
 
         public bool SetDiagramEntityList(List<DiagramEntity> diagramEntitiyList)
         {
+            // 작은 것부터 먼저 선택되도록, 정렬
             _diagramEntityList = diagramEntitiyList.OrderBy(r => r.EntityROI.Width * r.EntityROI.Height).ToList();
+            
             _selEntity = null;
             Invalidate();
             return true;
@@ -496,17 +525,17 @@ namespace GitDockPanelSuite
     #region EventArgs
     public class DiagramEntityEventArgs : EventArgs
     {
-        public EntityActionType ActionType { get; private set; }
+        public EntityActionType ActionType { get; private set; } // 동작 유형
 
-        public InspWindow InspWindow { get; private set; }
+        public InspWindow InspWindow { get; private set; } // 선택된 객체
 
-        public InspWindowType WindowType { get; private set; }
+        public InspWindowType WindowType { get; private set; } // 선택된 객체의 타입
 
-        public List<InspWindow> InspWindowList { get; private set; }
+        public List<InspWindow> InspWindowList { get; private set; } // 선택된 객체 리스트
 
-        public OpenCvSharp.Rect Rect { get; private set; }
+        public OpenCvSharp.Rect Rect { get; private set; } // 선택된 객체의 영역
 
-        public OpenCvSharp.Point OffsetMove { get; private set; }
+        public OpenCvSharp.Point OffsetMove { get; private set; } // 이동 오프셋
 
         public DiagramEntityEventArgs(EntityActionType actionType, InspWindow inspWindow)
         {
