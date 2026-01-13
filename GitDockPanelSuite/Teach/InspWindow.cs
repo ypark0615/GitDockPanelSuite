@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using GitDockPanelSuite.Core;
+using GitDockPanelSuite.Inspect;
+using OpenCvSharp.Internal.Vectors;
 
 namespace GitDockPanelSuite.Teach
 {
@@ -24,6 +26,8 @@ namespace GitDockPanelSuite.Teach
 
         [XmlElement("InspAlgorithm")]
         public List<InspAlgorithm> AlgorithmList { get; set; } = new List<InspAlgorithm>();
+
+        public List<InspResult> InspResultList { get; set; } = new List<InspResult>(); // 검사 결과를 저장하기 위한 리스트
 
         //#11_MATCHING#1 패턴매칭에 필요한 티칭 이미지 관리 기능
         [XmlIgnore]
@@ -256,6 +260,19 @@ namespace GitDockPanelSuite.Teach
             return true;
         }
 
+        public void ResetInspResult() // 검사 결과 초기화 함수
+        {
+            foreach(var algorithm in AlgorithmList)
+            {
+                algorithm.ResetResult();
+            }
 
+            InspResultList.Clear();
+        }
+
+        public void AddInspResult(InspResult inspResult) // 검사 결과 추가 함수
+        {
+            InspResultList.Add(inspResult);
+        }
     }
 }

@@ -28,7 +28,22 @@ namespace GitDockPanelSuite.UIControl
         UpdateImage
     }
 
-    public partial class ImageViewCtrl: UserControl
+    public struct InspectResultCount
+    {
+        public int Total { get; set; }
+        public int OK { get; set; }
+        public int NG { get; set; }
+
+        public InspectResultCount(int _totalCount, int _okCount, int _ngCount)
+        {
+            Total = _totalCount;
+            OK = _okCount;
+            NG = _ngCount;
+        }
+    }
+
+
+    public partial class ImageViewCtrl : UserControl
     {
         //ROI를 추가,수정,삭제 등으로 변경 시, 이벤트 발생
         public event EventHandler<DiagramEntityEventArgs> DiagramEntityEvent;
@@ -57,6 +72,8 @@ namespace GitDockPanelSuite.UIControl
 
         //#8_INSPECT_BINARY#15 템플릿 매칭 결과 출력을 위해 Rectangle 리스트 변수 설정
         private List<DrawInspectInfo> _rectInfos = new List<DrawInspectInfo>();
+
+        private InspectResultCount _inspectResultCount = new InspectResultCount();
 
 
         //#10_INSPWINDOW#15 ROI 편집에 필요한 변수 선언
@@ -90,7 +107,7 @@ namespace GitDockPanelSuite.UIControl
         private Rectangle _screenSelectedRect = Rectangle.Empty;
 
         private Size _extSize = new Size(0, 0);
-        
+
         //팝업 메뉴
         private ContextMenuStrip _contextMenu;
 
@@ -102,7 +119,7 @@ namespace GitDockPanelSuite.UIControl
             _contextMenu = new ContextMenuStrip();
             _contextMenu.Items.Add("Delete", null, OnDeleteClicked);
             _contextMenu.Items.Add(new ToolStripSeparator());
-            _contextMenu.Items.Add("Teaching", null, OnTeachingClicked);            
+            _contextMenu.Items.Add("Teaching", null, OnTeachingClicked);
             _contextMenu.Items.Add("Unlock", null, OnUnlockClicked);
 
 
@@ -347,7 +364,7 @@ namespace GitDockPanelSuite.UIControl
             }
 
             if (_multiSelectedEntities.Count <= 1 && _selEntity != null)
-            { 
+            {
                 //#11_MATCHING#8 패턴매칭할 영역 표시
                 DrawInspParam(g, _selEntity.LinkedWindow);
             }
@@ -424,6 +441,18 @@ namespace GitDockPanelSuite.UIControl
                         DrawText(g, infoText, textPos, fontSize, lineColor);
                     }
                 }
+            }
+
+
+            if(_inspectResultCount.Total > 0)
+            {
+                string resultText = $"Total: {_inspectResultCount.Total}\r\nOK: {_inspectResultCount.OK}\r\nNG: {_inspectResultCount.NG}";
+                // 결과 문자열 (결과 갯수, OK 결과 갯수, NG 결과 갯수)
+
+                float fontSize = 12.0f; // 기본 폰트 크기
+                Color resultColor = Color.FromArgb(255, 255, 255); // 흰색
+                PointF textPos = new PointF(Width - 80, 10); // 우측 상단
+                DrawText(g, resultText, textPos, fontSize, resultColor); // 텍스트 표출
             }
         }
 
@@ -790,8 +819,8 @@ namespace GitDockPanelSuite.UIControl
         {
             if (entity is null)
                 return;
-                if (!_multiSelectedEntities.Contains(entity))
-                    _multiSelectedEntities.Add(entity);
+            if (!_multiSelectedEntities.Contains(entity))
+                _multiSelectedEntities.Add(entity);
         }
 
         #region ROI Handle
@@ -980,6 +1009,89 @@ namespace GitDockPanelSuite.UIControl
         {
             _rectInfos.AddRange(rectInfos);
             Invalidate();
+        }
+
+        public void SetInspResultCount(InspectResultCount inspectResultCount)
+        {
+            _inspectResultCount = inspectResultCount;
+        }
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            _isCtrlPressed = keyData == Keys.Control;
+
+            if (keyData == (Keys.Control | Keys.C))
+            {
+                CopySelectedROIs(); // ROI 복사
+            }
+            else if (keyData == (Keys.Control | Keys.V))
+            {
+                PasteROIsAt(); // ROI 붙여넣기
+            }
+            else
+            {
+                switch (keyData)
+                {
+                    case Keys.Delete:
+                        {
+                            if (_selEntity != null)
+                            {
+                                DeleteSelEntity(); // 선택된 ROI 삭제 이벤트 발생
+                            }
+                        }
+                        break;
+                    case Keys.Enter:
+                        {
+                            InspWindow selWindow = null;
+                            if (_selEntity != null)
+                                selWindow = _selEntity.LinkedWindow;
+
+                            DiagramEntityEvent?.Invoke(this, new DiagramEntityEventArgs(EntityActionType.Inspect, selWindow)); // 선택된 ROI 검사 이벤트 발생
+                        }
+                        break;
+                }
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+        // ─── 복사(Ctrl+C) ----------------------------------------------------------
+        private void CopySelectedROIs() // #ROI COPYPASTE#
+        {
+            _copyBuffer.Clear();
+            for (int i = 0; i < _multiSelectedEntities.Count; i++)
+            {
+                _copyBuffer.Add(_multiSelectedEntities[i]);
+            }
+        }
+
+        // ─── 붙여넣기(Ctrl+V) ------------------------------------------------------
+        private void PasteROIsAt() // #ROI COPYPASTE#
+        {
+            if (_copyBuffer.Count == 0)
+                return;
+
+            // ① 기준점(마우스)을 Virtual 좌표로 변환
+            PointF virtBase = ScreenToVirtual(_mousePos);
+
+            foreach (var entity in _copyBuffer)
+            {
+                int dx = (int)(virtBase.X - entity.EntityROI.Left + 0.5f);
+                int dy = (int)(virtBase.Y - entity.EntityROI.Top + 0.5f);
+                var newRect = entity.EntityROI;
+
+                DiagramEntityEvent?.Invoke(this,
+                    new DiagramEntityEventArgs(EntityActionType.Copy, entity.LinkedWindow,
+                                                entity.LinkedWindow?.InspWindowType ?? InspWindowType.None,
+                                                newRect, new Point(dx, dy)));
+            }
+            Invalidate();
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Control)
+                _isCtrlPressed = false;
+
+            base.OnKeyUp(e);
         }
 
         public void ResetEntity()

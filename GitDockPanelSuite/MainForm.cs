@@ -47,20 +47,23 @@ namespace GitDockPanelSuite
             cameraWindow.Show(_dockPanel, DockState.Document);
 
             //검사 결과창 30% 비율로 추가
-            //ResultForm resultWindow = new ResultForm();
-            //resultWindow.Show(camerWindow.Pane, DockAlignment.Bottom, 0.3);
-
-            var runWindow = new RunForm();
-            runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
-            //runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
+            ResultForm resultWindow = new ResultForm();
+            resultWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.3);
 
             var modelTreeWindow = new ModelTreeForm();
-            modelTreeWindow.Show(runWindow.Pane, DockAlignment.Right, 0.3);
+            modelTreeWindow.Show(resultWindow.Pane, DockAlignment.Right, 0.4);
+
+            //실행창 추가
+            var runWindow = new RunForm();
+            runWindow.Show(modelTreeWindow.Pane, null);
+            //runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
+            //runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
 
 
-            //속성 창 추가
+            //속성창 추가
             var propWindow = new PropertiesForm();
             propWindow.Show(_dockPanel, DockState.DockRight);
+
 
             /*//속성창과 같은 탭에 추가하기
             var statisticWindow = new StatisticForm();

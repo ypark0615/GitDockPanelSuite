@@ -159,5 +159,11 @@ namespace GitDockPanelSuite
         {
             imageViewer.NewRoi(inspWindowType);
         }
+
+
+        public void SetInspResultCount(int totalArea, int okCnt, int ngCnt)
+        {
+            imageViewer.SetInspResultCount(new InspectResultCount(totalArea, okCnt, ngCnt));
+        }
     }
 }

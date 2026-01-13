@@ -36,7 +36,7 @@
             // btnGrab
             // 
             this.btnGrab.Location = new System.Drawing.Point(17, 18);
-            this.btnGrab.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnGrab.Margin = new System.Windows.Forms.Padding(4);
             this.btnGrab.Name = "btnGrab";
             this.btnGrab.Size = new System.Drawing.Size(131, 74);
             this.btnGrab.TabIndex = 0;
@@ -47,7 +47,7 @@
             // btnStart
             // 
             this.btnStart.Location = new System.Drawing.Point(297, 18);
-            this.btnStart.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnStart.Margin = new System.Windows.Forms.Padding(4);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(131, 74);
             this.btnStart.TabIndex = 0;
@@ -60,7 +60,7 @@
             this.chkLive.Appearance = System.Windows.Forms.Appearance.Button;
             this.chkLive.Font = new System.Drawing.Font("굴림", 9F);
             this.chkLive.Location = new System.Drawing.Point(156, 18);
-            this.chkLive.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.chkLive.Margin = new System.Windows.Forms.Padding(4);
             this.chkLive.Name = "chkLive";
             this.chkLive.Size = new System.Drawing.Size(133, 74);
             this.chkLive.TabIndex = 2;
@@ -77,7 +77,7 @@
             this.Controls.Add(this.chkLive);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.btnGrab);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "RunForm";
             this.Text = "RunForm";
             this.ResumeLayout(false);

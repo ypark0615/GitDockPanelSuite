@@ -56,6 +56,9 @@
     <Reference Include="MvCameraControl.Net">
       <HintPath>..\Lib\MvCameraControl.Net.dll</HintPath>
     </Reference>
+    <Reference Include="ObjectListView">
+      <HintPath>..\Lib\ObjectListView.dll</HintPath>
+    </Reference>
     <Reference Include="OpenCvSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=6adad1e807fea099, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\OpenCvSharp.dll</HintPath>
@@ -115,6 +118,7 @@
     <Compile Include="Core\ImageSpace.cs" />
     <Compile Include="Core\InspStage.cs" />
     <Compile Include="Core\PreviewImage.cs" />
+    <Compile Include="Inspect\InspResult.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
