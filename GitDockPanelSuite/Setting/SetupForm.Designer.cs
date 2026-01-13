@@ -37,14 +37,14 @@
             this.tabSetting.Location = new System.Drawing.Point(0, 0);
             this.tabSetting.Name = "tabSetting";
             this.tabSetting.SelectedIndex = 0;
-            this.tabSetting.Size = new System.Drawing.Size(800, 450);
-            this.tabSetting.TabIndex = 0;
+            this.tabSetting.Size = new System.Drawing.Size(466, 237);
+            this.tabSetting.TabIndex = 1;
             // 
             // SetupForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(466, 237);
             this.Controls.Add(this.tabSetting);
             this.Name = "SetupForm";
             this.Text = "SetupForm";

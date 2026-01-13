@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Core
 {
+    //싱글톤을 이용하여, 전역적으로 쉽게 접근하는 클래스
     public class Global : IDisposable
     {
-        
         #region Singleton Instance
         private static readonly Lazy<Global> _instance = new Lazy<Global>(() => new Global());
         /* 지연 초기화 객체(Lazy):
@@ -38,7 +38,6 @@ namespace GitDockPanelSuite.Core
             }
         }
         #endregion
-
 
         private InspStage _stage = new InspStage();
 

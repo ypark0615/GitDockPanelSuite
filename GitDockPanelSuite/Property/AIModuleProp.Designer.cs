@@ -28,114 +28,72 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
-            this.TextBox_ModelPath = new System.Windows.Forms.TextBox();
-            this.Btn_ModelFileLoad = new System.Windows.Forms.Button();
-            this.ComboBox_AIMode = new System.Windows.Forms.ComboBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.Btn_ModelApply = new System.Windows.Forms.Button();
-            this.Btn_ModelInit = new System.Windows.Forms.Button();
-            this.Btn_InspAI = new System.Windows.Forms.Button();
+            this.txtAIModelPath = new System.Windows.Forms.TextBox();
+            this.btnSelAIModel = new System.Windows.Forms.Button();
+            this.btnLoadModel = new System.Windows.Forms.Button();
+            this.btnInspAI = new System.Windows.Forms.Button();
+            this.cbAIModelType = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
-            // label1
+            // txtAIModelPath
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 66);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(99, 18);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Model Path";
+            this.txtAIModelPath.Location = new System.Drawing.Point(13, 38);
+            this.txtAIModelPath.Name = "txtAIModelPath";
+            this.txtAIModelPath.ReadOnly = true;
+            this.txtAIModelPath.Size = new System.Drawing.Size(240, 21);
+            this.txtAIModelPath.TabIndex = 0;
             // 
-            // TextBox_ModelPath
+            // btnSelAIModel
             // 
-            this.TextBox_ModelPath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.TextBox_ModelPath.Location = new System.Drawing.Point(121, 60);
-            this.TextBox_ModelPath.Name = "TextBox_ModelPath";
-            this.TextBox_ModelPath.ReadOnly = true;
-            this.TextBox_ModelPath.Size = new System.Drawing.Size(161, 28);
-            this.TextBox_ModelPath.TabIndex = 1;
+            this.btnSelAIModel.Location = new System.Drawing.Point(13, 65);
+            this.btnSelAIModel.Name = "btnSelAIModel";
+            this.btnSelAIModel.Size = new System.Drawing.Size(92, 28);
+            this.btnSelAIModel.TabIndex = 1;
+            this.btnSelAIModel.Text = "AI모델 선택";
+            this.btnSelAIModel.UseVisualStyleBackColor = true;
+            this.btnSelAIModel.Click += new System.EventHandler(this.btnSelAIModel_Click);
             // 
-            // Btn_ModelFileLoad
+            // btnLoadModel
             // 
-            this.Btn_ModelFileLoad.Location = new System.Drawing.Point(291, 61);
-            this.Btn_ModelFileLoad.Margin = new System.Windows.Forms.Padding(0);
-            this.Btn_ModelFileLoad.Name = "Btn_ModelFileLoad";
-            this.Btn_ModelFileLoad.Size = new System.Drawing.Size(75, 28);
-            this.Btn_ModelFileLoad.TabIndex = 2;
-            this.Btn_ModelFileLoad.Text = "파일";
-            this.Btn_ModelFileLoad.UseVisualStyleBackColor = true;
-            this.Btn_ModelFileLoad.Click += new System.EventHandler(this.Btn_ModelFileLoad_Click);
+            this.btnLoadModel.Location = new System.Drawing.Point(13, 99);
+            this.btnLoadModel.Name = "btnLoadModel";
+            this.btnLoadModel.Size = new System.Drawing.Size(89, 29);
+            this.btnLoadModel.TabIndex = 2;
+            this.btnLoadModel.Text = "모델 로딩";
+            this.btnLoadModel.UseVisualStyleBackColor = true;
+            this.btnLoadModel.Click += new System.EventHandler(this.btnLoadModel_Click);
             // 
-            // ComboBox_AIMode
+            // btnInspAI
             // 
-            this.ComboBox_AIMode.FormattingEnabled = true;
-            this.ComboBox_AIMode.Items.AddRange(new object[] {
-            "SEG",
-            "DET",
-            "IAD"});
-            this.ComboBox_AIMode.Location = new System.Drawing.Point(121, 25);
-            this.ComboBox_AIMode.Name = "ComboBox_AIMode";
-            this.ComboBox_AIMode.Size = new System.Drawing.Size(245, 26);
-            this.ComboBox_AIMode.TabIndex = 3;
-            this.ComboBox_AIMode.SelectedIndexChanged += new System.EventHandler(this.ComboBox_AIMode_SelectedIndexChanged);
+            this.btnInspAI.Location = new System.Drawing.Point(13, 134);
+            this.btnInspAI.Name = "btnInspAI";
+            this.btnInspAI.Size = new System.Drawing.Size(89, 26);
+            this.btnInspAI.TabIndex = 3;
+            this.btnInspAI.Text = "AI 검사";
+            this.btnInspAI.UseVisualStyleBackColor = true;
+            this.btnInspAI.Click += new System.EventHandler(this.btnInspAI_Click);
             // 
-            // label2
+            // cbAIModelType
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 28);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(54, 18);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Mode";
-            // 
-            // Btn_ModelApply
-            // 
-            this.Btn_ModelApply.Location = new System.Drawing.Point(246, 108);
-            this.Btn_ModelApply.Margin = new System.Windows.Forms.Padding(0);
-            this.Btn_ModelApply.Name = "Btn_ModelApply";
-            this.Btn_ModelApply.Size = new System.Drawing.Size(120, 40);
-            this.Btn_ModelApply.TabIndex = 5;
-            this.Btn_ModelApply.Text = "모델 적용";
-            this.Btn_ModelApply.UseVisualStyleBackColor = true;
-            this.Btn_ModelApply.Click += new System.EventHandler(this.Btn_ModelApply_Click);
-            // 
-            // Btn_ModelInit
-            // 
-            this.Btn_ModelInit.Location = new System.Drawing.Point(19, 108);
-            this.Btn_ModelInit.Margin = new System.Windows.Forms.Padding(0);
-            this.Btn_ModelInit.Name = "Btn_ModelInit";
-            this.Btn_ModelInit.Size = new System.Drawing.Size(120, 40);
-            this.Btn_ModelInit.TabIndex = 6;
-            this.Btn_ModelInit.Text = "모델 초기화";
-            this.Btn_ModelInit.UseVisualStyleBackColor = true;
-            this.Btn_ModelInit.Click += new System.EventHandler(this.Btn_ModelInit_Click);
-            // 
-            // Btn_InspAI
-            // 
-            this.Btn_InspAI.Location = new System.Drawing.Point(19, 164);
-            this.Btn_InspAI.Margin = new System.Windows.Forms.Padding(0);
-            this.Btn_InspAI.Name = "Btn_InspAI";
-            this.Btn_InspAI.Size = new System.Drawing.Size(347, 40);
-            this.Btn_InspAI.TabIndex = 7;
-            this.Btn_InspAI.Text = "검사";
-            this.Btn_InspAI.UseVisualStyleBackColor = true;
-            this.Btn_InspAI.Click += new System.EventHandler(this.Btn_InspAI_Click);
+            this.cbAIModelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbAIModelType.FormattingEnabled = true;
+            this.cbAIModelType.Location = new System.Drawing.Point(13, 12);
+            this.cbAIModelType.Name = "cbAIModelType";
+            this.cbAIModelType.Size = new System.Drawing.Size(132, 20);
+            this.cbAIModelType.TabIndex = 4;
+            this.cbAIModelType.SelectedIndexChanged += new System.EventHandler(this.cbAIModelType_SelectedIndexChanged);
             // 
             // AIModuleProp
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.Btn_InspAI);
-            this.Controls.Add(this.Btn_ModelInit);
-            this.Controls.Add(this.Btn_ModelApply);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.ComboBox_AIMode);
-            this.Controls.Add(this.Btn_ModelFileLoad);
-            this.Controls.Add(this.TextBox_ModelPath);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.cbAIModelType);
+            this.Controls.Add(this.btnInspAI);
+            this.Controls.Add(this.btnLoadModel);
+            this.Controls.Add(this.btnSelAIModel);
+            this.Controls.Add(this.txtAIModelPath);
             this.Name = "AIModuleProp";
-            this.Size = new System.Drawing.Size(389, 280);
+            this.Size = new System.Drawing.Size(267, 328);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -143,13 +101,10 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox TextBox_ModelPath;
-        private System.Windows.Forms.Button Btn_ModelFileLoad;
-        private System.Windows.Forms.ComboBox ComboBox_AIMode;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button Btn_ModelApply;
-        private System.Windows.Forms.Button Btn_ModelInit;
-        private System.Windows.Forms.Button Btn_InspAI;
+        private System.Windows.Forms.TextBox txtAIModelPath;
+        private System.Windows.Forms.Button btnSelAIModel;
+        private System.Windows.Forms.Button btnLoadModel;
+        private System.Windows.Forms.Button btnInspAI;
+        private System.Windows.Forms.ComboBox cbAIModelType;
     }
 }

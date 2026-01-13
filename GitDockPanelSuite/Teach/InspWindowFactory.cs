@@ -51,7 +51,7 @@ namespace GitDockPanelSuite.Teach
 
         private bool AddInspAlgorithm(InspWindow inspWindow)
         {
-            switch (inspWindow.inspWindowType)
+            switch (inspWindow.InspWindowType)
             {
                 case InspWindowType.Base:
                     inspWindow.AddInspAlgorithm(InspectType.InspBinary);

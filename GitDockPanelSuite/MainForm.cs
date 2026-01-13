@@ -17,6 +17,7 @@ namespace GitDockPanelSuite
     public partial class MainForm : Form
     {
         private static DockPanel _dockPanel;
+
         public MainForm()
         {
             InitializeComponent();
@@ -52,6 +53,10 @@ namespace GitDockPanelSuite
             runWindow.Show(cameraWindow.Pane, DockAlignment.Bottom, 0.2);
             //runWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
 
+            var modelTreeWindow = new ModelTreeForm();
+            modelTreeWindow.Show(runWindow.Pane, DockAlignment.Right, 0.3);
+
+
             //속성 창 추가
             var propWindow = new PropertiesForm();
             propWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
@@ -82,10 +87,11 @@ namespace GitDockPanelSuite
             {
                 openFileDialog.Title = "이미지 파일 선택";
                 openFileDialog.Filter = "Image Files|*.bmp;*.jpg;*.jpeg;*.png;*.gif";
+                openFileDialog.Multiselect = false;
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = openFileDialog.FileName;
-                    cameraForm.LoadImage(openFileDialog.FileName);
+                    cameraForm.LoadImage(filePath);
                 }
             }
         }
@@ -95,5 +101,11 @@ namespace GitDockPanelSuite
             SetupForm setupForm = new SetupForm();
             setupForm.ShowDialog();
         }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Global.Inst.Dispose();
+        }
+
     }
 }

@@ -1,5 +1,4 @@
-﻿using GitDockPanelSuite.Core;
-using MvCamCtrl.NET;
+﻿using MvCamCtrl.NET;
 using MvCameraControl;
 using System;
 using System.Collections.Generic;
@@ -17,38 +16,41 @@ namespace GitDockPanelSuite.Grab
 
         private IDevice _device = null;
 
+        // 이미지 취득 콜백함수
         void FrameGrabedEventHandler(object sender, FrameGrabbedEventArgs e)
         {
-            Console.WriteLine($"Get one frame: Width[{e.FrameOut.Image.Width}], Height[{e.FrameOut.Image.Height}], ImageSize[{e.FrameOut.Image.ImageSize}], FrameNum[{e.FrameOut.FrameNum}]");
+            Console.WriteLine("Get one frame: Width[{0}] , Height[{1}] , ImageSize[{2}], FrameNum[{3}]", e.FrameOut.Image.Width, e.FrameOut.Image.Height, e.FrameOut.Image.ImageSize, e.FrameOut.FrameNum);
 
-            IFrameOut framOut = e.FrameOut;
+            IFrameOut frameOut = e.FrameOut;
 
+            // 영상 취득이 완료되었을 때 이벤트 발생
             OnGrabCompleted(BufferIndex);
 
-            if(_userImageBuffer[BufferIndex].ImageBuffer != null)
+            if (_userImageBuffer[BufferIndex].ImageBuffer != null)
             {
-                if(framOut.Image.PixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
+                if (frameOut.Image.PixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
                 {
-                    if(_userImageBuffer[BufferIndex].ImageBuffer != null)
+                    if (_userImageBuffer[BufferIndex].ImageBuffer != null)
                     {
-                        IntPtr ptrSourceTemp = framOut.Image.PixelDataPtr;
-                        Marshal.Copy(ptrSourceTemp, _userImageBuffer[BufferIndex].ImageBuffer, 0, (int)framOut.Image.ImageSize);
-                    }
+                        IntPtr ptrSourceTemp = frameOut.Image.PixelDataPtr;
+                        Marshal.Copy(ptrSourceTemp, _userImageBuffer[BufferIndex].ImageBuffer, 0, (int)frameOut.Image.ImageSize);
+                    }   
                 }
                 else
                 {
-                    IImage inputImage = framOut.Image;
+                    IImage inputImage = frameOut.Image;
                     IImage outImage;
-                    MvGvspPixelType dstPixelType = MvGvspPixelType. PixelType_Gvsp_BGR8_Packed;
+                    MvGvspPixelType dstPixelType = MvGvspPixelType.PixelType_Gvsp_RGB8_Packed;
 
+                    // Pixel type convert 
                     int result = _device.PixelTypeConverter.ConvertPixelType(inputImage, out outImage, dstPixelType);
-                    if(result != MvError.MV_OK)
+                    if (result != MvError.MV_OK)
                     {
                         Console.WriteLine("Image Convert failed:{0:x8}", result);
                         return;
                     }
 
-                    if(_userImageBuffer[BufferIndex].ImageBuffer != null)
+                    if (_userImageBuffer[BufferIndex].ImageBuffer != null)
                     {
                         IntPtr ptrSourceTemp = outImage.PixelDataPtr;
                         Marshal.Copy(ptrSourceTemp, _userImageBuffer[BufferIndex].ImageBuffer, 0, (int)outImage.ImageSize);
@@ -56,30 +58,37 @@ namespace GitDockPanelSuite.Grab
                 }
             }
 
+            // 영상 전송이 완료되었을 때 이벤트 발생
             OnTransferCompleted(BufferIndex);
 
+            //IO 트리거 촬상시 최대 버퍼를 넘으면 첫번째 버퍼로 변경
             if (IncreaseBufferIndex)
             {
                 BufferIndex++;
-                if(BufferIndex >= _userImageBuffer.Count())
+                if (BufferIndex >= _userImageBuffer.Count())
                     BufferIndex = 0;
             }
         }
 
+        #region Method
+        
+        
         internal override bool Create(string strIpAddr = null)
         {
+            // Initialize SDK
             SDKSystem.Initialize();
 
             _strIpAddr = strIpAddr;
 
             try
             {
-                const DeviceTLayerType deviceTLType = DeviceTLayerType.MvGigEDevice;
-
+                const DeviceTLayerType devLayerType = DeviceTLayerType.MvGigEDevice;
+                
                 List<IDeviceInfo> devInfoList;
 
-                int ret = DeviceEnumerator.EnumDevices(deviceTLType, out devInfoList);
-                if(ret != MvError.MV_OK)
+                // Enum device
+                int ret = DeviceEnumerator.EnumDevices(devLayerType, out devInfoList);
+                if (ret != MvError.MV_OK)
                 {
                     Console.WriteLine("Enum device failed:{0:x8}", ret);
                     return false;
@@ -87,17 +96,19 @@ namespace GitDockPanelSuite.Grab
 
                 Console.WriteLine("Enum device count : {0}", devInfoList.Count);
 
-                if(0 == devInfoList.Count)
+                if (0 == devInfoList.Count)
                 {
                     return false;
                 }
 
                 int selDevIndex = -1;
+
+                // Print device info
                 int devIndex = 0;
-                foreach(var devInfo in devInfoList)
+                foreach (var devInfo in devInfoList)
                 {
-                    Console.WriteLine($"[Device {devIndex}]:");
-                    if(devInfo is IGigEDeviceInfo)
+                    Console.WriteLine("[Device {0}]:", devIndex);
+                    if (devInfo.TLayerType == DeviceTLayerType.MvGigEDevice || devInfo.TLayerType == DeviceTLayerType.MvVirGigEDevice || devInfo.TLayerType == DeviceTLayerType.MvGenTLGigEDevice)
                     {
                         IGigEDeviceInfo gigeDevInfo = devInfo as IGigEDeviceInfo;
                         uint nIp1 = ((gigeDevInfo.CurrentIp & 0xff000000) >> 24);
@@ -105,40 +116,41 @@ namespace GitDockPanelSuite.Grab
                         uint nIp3 = ((gigeDevInfo.CurrentIp & 0x0000ff00) >> 8);
                         uint nIp4 = (gigeDevInfo.CurrentIp & 0x000000ff);
 
-                        string strIp = $"{nIp1}.{nIp2}.{nIp3}.{nIp4}";
+                        string strIP = nIp1 + "." + nIp2 + "." + nIp3 + "." + nIp4;
+                        Console.WriteLine("DevIP" + strIP);
 
-                        Console.WriteLine($"DevIP:{strIp}");
-
-                        if(_strIpAddr is null || strIp == _strIpAddr)
+                        if (_strIpAddr is null || strIP == strIpAddr)
                         {
                             selDevIndex = devIndex;
                             break;
                         }
                     }
 
-                    Console.WriteLine($"Model Name: {devInfo.ModelName}");
-                    Console.WriteLine($"SerialNumber: {devInfo.SerialNumber}");
-                    Console.WriteLine("");
+                    Console.WriteLine("ModelName:" + devInfo.ModelName);
+                    Console.WriteLine("SerialNumber:" + devInfo.SerialNumber);
+                    Console.WriteLine();
                     devIndex++;
                 }
 
-                if(selDevIndex < 0 || selDevIndex >= devInfoList.Count)
+                if (selDevIndex < 0 || selDevIndex > devInfoList.Count - 1)
                 {
-                    Console.WriteLine($"Invalid selected device number: {_strIpAddr}");
+                    Console.WriteLine("Invalid selected device number:{0}", selDevIndex);
                     return false;
                 }
 
+                // Create device
                 _device = DeviceFactory.CreateDevice(devInfoList[selDevIndex]);
+
                 _disposed = false;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
+                //MessageBox.Show(ex.Message);
                 ex.ToString();
                 return false;
             }
             return true;
         }
-
 
         internal override bool Grab(int bufferIndex, bool waitDone)
         {
@@ -168,13 +180,11 @@ namespace GitDockPanelSuite.Grab
 
         internal override bool Close()
         {
-            if(_device != null)
+            if (_device != null)
             {
                 _device.StreamGrabber.StopGrabbing();
                 _device.Close();
             }
-
-            _device = null;
 
             return true;
         }
@@ -183,62 +193,67 @@ namespace GitDockPanelSuite.Grab
         {
             try
             {
-                if(_device == null) return false;
+                if (_device == null)
+                    return false;
 
                 if (!_device.IsConnected)
                 {
                     int ret = _device.Open();
-                    if (ret != MvError.MV_OK)
+                    if (MvError.MV_OK != ret)
                     {
                         _device.Dispose();
-                        Console.WriteLine("Device Open fail!", ret);
+                        Console.WriteLine("Device open fail!", ret);
                         return false;
                     }
 
-                    if(_device is IGigEDevice)
+                    if (_device is IGigEDevice)
                     {
                         int packetSize;
                         ret = (_device as IGigEDevice).GetOptimalPacketSize(out packetSize);
-
-                        if(packetSize > 0)
+                        if (packetSize > 0)
                         {
                             ret = _device.Parameters.SetIntValue("GevSCPSPacketSize", packetSize);
-
-                            if(ret != MvError.MV_OK)
+                            if (ret != MvError.MV_OK)
                             {
-                                Console.WriteLine("Warning: Set Packet Size failed{0:x8}", ret);
+                                Console.WriteLine("Warning: Set Packet Size failed {0:x8}", ret);
                             }
                             else
                             {
-                                Console.WriteLine($"Set PacketSize to {packetSize}");
+                                Console.WriteLine("Set PacketSize to {0}", packetSize);
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Warning: Get Packet Size failed{0:x8}", ret);
+                            Console.WriteLine("Warning: Get Packet Size failed {0:x8}", ret);
                         }
                     }
 
+                    // set trigger mode as off
                     ret = _device.Parameters.SetEnumValue("TriggerMode", 1);
-                    if(ret != MvError.MV_OK)
+                    if (ret != MvError.MV_OK)
                     {
                         Console.WriteLine("Set TriggerMode failed:{0:x8}", ret);
                         return false;
                     }
 
-                    _device.Parameters.SetEnumValueByString("TriggerSource", HardwareTrigger ? "Line0" : "Software");
+                    if (HardwareTrigger)
+                        _device.Parameters.SetEnumValueByString("TriggerSource", "Line0");
+                    else
+                        _device.Parameters.SetEnumValueByString("TriggerSource", "Software");
                     
+                    // Register image callback
                     _device.StreamGrabber.FrameGrabedEvent += FrameGrabedEventHandler;
 
+                    // start grab image
                     ret = _device.StreamGrabber.StartGrabbing();
                     if (ret != MvError.MV_OK)
                     {
-                        Console.WriteLine("Start Grabbing failed:{0:x8}", ret);
+                        Console.WriteLine("Start grabbing failed:{0:x8}", ret);
                         return false;
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 return false;
@@ -254,9 +269,7 @@ namespace GitDockPanelSuite.Grab
                 Console.WriteLine("_camera is null");
                 return false;
             }
-
             Close();
-            Create();
             return Open();
         }
 
@@ -267,29 +280,32 @@ namespace GitDockPanelSuite.Grab
 
             IEnumValue enumValue;
             int result = _device.Parameters.GetEnumValue("PixelFormat", out enumValue);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
                 Console.WriteLine("Get PixelFormat failed: nRet {0:x8}", result);
                 return false;
             }
 
-            if(MvGvspPixelType.PixelType_Gvsp_Mono8 == (MvGvspPixelType)enumValue.CurEnumEntry.Value)
+            if (MvGvspPixelType.PixelType_Gvsp_Mono8 == (MvGvspPixelType)enumValue.CurEnumEntry.Value)
                 pixelBpp = 8;
             else
                 pixelBpp = 24;
 
             return true;
         }
+        #endregion
 
+
+        #region Parameter Setting
         internal override bool SetExposureTime(long exposure)
         {
             if(_device == null) return false;
 
             _device.Parameters.SetEnumValue("ExposureAuto", 0);
             int result = _device.Parameters.SetFloatValue("ExposureTime", exposure);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Set ExposureTime failed!", result);
+                Console.WriteLine("Set Exposure Time Fail!", result);
                 return false;
             }
 
@@ -303,7 +319,7 @@ namespace GitDockPanelSuite.Grab
 
             IFloatValue floatValue;
             int result = _device.Parameters.GetFloatValue("ExposureTime", out floatValue);
-            if(result == MvError.MV_OK)
+            if (result == MvError.MV_OK)
             {
                 exposure = (long)floatValue.CurValue;
             }
@@ -317,9 +333,9 @@ namespace GitDockPanelSuite.Grab
 
             _device.Parameters.SetEnumValue("GainAuto", 0);
             int result = _device.Parameters.SetFloatValue("Gain", gain);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Set Gain failed!", result);
+                Console.WriteLine("Set Gain Time Fail!", result);
                 return false;
             }
 
@@ -333,19 +349,19 @@ namespace GitDockPanelSuite.Grab
 
             IFloatValue floatValue;
             int result = _device.Parameters.GetFloatValue("Gain", out floatValue);
-            if(result == MvError.MV_OK)
+            if (result == MvError.MV_OK)
             {
-                gain = (long)floatValue.CurValue;
+                gain = floatValue.CurValue;
             }
 
             return true;
         }
 
-        internal override bool GetResolution(out int width, out int height, out int stirde)
+        internal override bool GetResolution(out int width, out int height, out int stride)
         {
             width = 0;
             height = 0;
-            stirde = 0;
+            stride = 0;
 
             if(_device == null) return false;
 
@@ -356,7 +372,7 @@ namespace GitDockPanelSuite.Grab
             int result;
 
             result = _device.Parameters.GetIntValue("Width", out intValue);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
                 Console.WriteLine("Get Width failed: nRet {0:x8}", result);
                 return false;
@@ -364,7 +380,7 @@ namespace GitDockPanelSuite.Grab
             width = (int)intValue.CurValue;
 
             result = _device.Parameters.GetIntValue("Height", out intValue);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
                 Console.WriteLine("Get Height failed: nRet {0:x8}", result);
                 return false;
@@ -372,18 +388,17 @@ namespace GitDockPanelSuite.Grab
             height = (int)intValue.CurValue;
 
             result = _device.Parameters.GetEnumValue("PixelFormat", out enumValue);
-            if(result != MvError.MV_OK)
+            if (result != MvError.MV_OK)
             {
                 Console.WriteLine("Get PixelFormat failed: nRet {0:x8}", result);
                 return false;
             }
             pixelType = (MvGvspPixelType)enumValue.CurEnumEntry.Value;
 
-
-            if(pixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
-                stirde = width * 1;
+            if (pixelType == MvGvspPixelType.PixelType_Gvsp_Mono8)
+                stride = width * 1;
             else
-                stirde = width * 3;
+                stride = width * 3;
 
             return true;
         }
@@ -394,31 +409,38 @@ namespace GitDockPanelSuite.Grab
 
             HardwareTrigger = hardwareTrigger;
 
-            _device.Parameters.SetEnumValueByString("TriggerSource", HardwareTrigger ? "Line0" : "Software");
+            if (HardwareTrigger)
+                _device.Parameters.SetEnumValueByString("TriggerSource", "Line0");
+            else
+                _device.Parameters.SetEnumValueByString("TriggerSource", "Software");
 
             return true;
         }
 
+        #endregion
+
+        #region Dispose
+
         private bool _disposed = false;
 
-        protected virtual void Dispose(bool disposing)
+        protected void Dispose(bool disposing)
         {
-            if(_disposed)
-                return;
+            if (_disposed) return;
 
-            if(disposing)
+            if (disposing)
             {
                 if(_device != null)
                 {
                     _device.StreamGrabber.FrameGrabedEvent -= FrameGrabedEventHandler;
                     _device.StreamGrabber.StopGrabbing();
+                    _device.Close();
                     _device.Dispose();
                     _device = null;
 
+                    // Finalize SDK
                     SDKSystem.Finalize();
                 }
             }
-
             _disposed = true;
         }
 
@@ -426,5 +448,6 @@ namespace GitDockPanelSuite.Grab
         {
             Dispose(disposing: true);
         }
+        #endregion //Disposable
     }
 }

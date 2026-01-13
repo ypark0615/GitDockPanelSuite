@@ -31,11 +31,11 @@ namespace GitDockPanelSuite
     public enum AIEngineType
     {
         [Description("Anomaly Detection")]
-        AnomalyDetection = 2,
+        AnomalyDetection = 0,
         [Description("Segmentation")]
-        Segmentation = 0,
+        Segmentation,
         [Description("Detection")]
-        Detection = 1
+        Detection
     }
 
     public class SaigeAI : IDisposable
@@ -127,6 +127,10 @@ namespace GitDockPanelSuite
             // 검사 전 option에 대한 설정을 가져옵니다
             SegmentationOption option = _segEngine.GetInferenceOption();
 
+            /// 추론 API 실행에 소요되는 시간을 세분화하여 출력할지 결정합니다.
+            /// `true`로 설정하면 이미지를 읽는 시간, 순수 딥러닝 추론 시간, 후처리 시간을 각각 확인할 수 있습니다.
+            /// `false`로 설정하면 추론 API 실행에 소요된 총 시간만을 확인할 수 있습니다.
+            /// `true`로 설정하면 전체 추론 시간이 느려질 수 있습니다. 실제 검사 시에는 `false`로 설정하는 것을 권장합니다.
             option.CalcTime = true;
             option.CalcObject = true;
             option.CalcScoremap = false;

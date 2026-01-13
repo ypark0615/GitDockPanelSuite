@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using OpenCvSharp;
 using GitDockPanelSuite.Util;
 
@@ -11,6 +14,7 @@ namespace GitDockPanelSuite.Core
 {
     public enum eImageChannel : int // 컬러 이미지 채널 구분용 enum
     {
+    	None = -1,
         Color,          // 원본 컬러
         Gray,           // 그레이(변환)
         Red,            // R 채널
@@ -19,7 +23,8 @@ namespace GitDockPanelSuite.Core
         ChannelCount = 5,
     }
 
-    public class ImageSpace : IDisposable // 검사와 관련된 이미지 버퍼를 관리하는 클래스
+    //검사와 관련된 이미지 버퍼를 관리하는 클래스
+    public class ImageSpace : IDisposable
     {
         private class ImageInfo : IDisposable // 버퍼 1개(원본 or 채널)의 이미지 메타/데이터/포인터를 관리
         {
@@ -404,6 +409,7 @@ namespace GitDockPanelSuite.Core
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-        #endregion
+
+        #endregion //Disposable
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenCvSharp;
+using GitDockPanelSuite.Core;
 
 namespace GitDockPanelSuite.Algorithm
 {
@@ -11,32 +12,41 @@ namespace GitDockPanelSuite.Algorithm
     {
         InspNone = -1,
         InspBinary,
+        InspMatch,
         InspFilter,
         InspAIModule,
         InspCount
     }
 
     public abstract class InspAlgorithm
-    {
+    { 
+        //알고리즘 타입 정의
         public InspectType InspectType { get; set; } = InspectType.InspNone;
 
+        //알고지즘을 사용할지 여부 결정
         public bool IsUse { get; set; } = true;
-
+        //검사가 완료되었는지를 판단
         public bool IsInspected { get; set; } = false;
 
-        public Rect TeachRect { get; set; } // 학습 영역
+        //#8_INSPECT_BINARY#1 검사할 영역 정보를 저장하는 변수
+        public Rect TeachRect { get; set; }
+        public Rect InspRect { get; set; }
 
-        public Rect InspRect { get; set; } // 실제 검사 영역
+        public eImageChannel ImageChannel { get; set; } = eImageChannel.Gray;
 
+        //검사할 원본 이미지
         protected Mat _srcImage = null;
 
+        //검사 결과 정보
         public List<string> ResultString { get; set; } = new List<string>();
 
+        //불량 여부
         public bool IsDefect { get; set; }
 
         public abstract InspAlgorithm Clone();
         public abstract bool CopyFrom(InspAlgorithm sourceAlgo);
 
+        /// <summary>자식 클래스에서 공통 필드를 복사하려고 부르는 헬퍼</summary>
         protected void CopyBaseTo(InspAlgorithm target)
         {
             target.InspectType = this.InspectType;
@@ -44,15 +54,18 @@ namespace GitDockPanelSuite.Algorithm
             target.IsInspected = this.IsInspected;
             target.TeachRect = this.TeachRect;
             target.InspRect = this.InspRect;
+            // NOTE: _srcImage 는 런타임 검사용이라 복사하지 않음
         }
 
         public virtual void SetInspData(Mat srcImage)
-        { // 검사에 필요한 데이터 설정
+        {
             _srcImage = srcImage;
         }
 
+        //검사 함수로, 상속 받는 클래스는 필수로 구현해야한다.
         public abstract bool DoInspect();
 
+        //검사 결과 정보 초기화
         public virtual void ResetResult()
         {
             IsInspected = false;

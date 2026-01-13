@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MvCameraControl;
 
 namespace GitDockPanelSuite.Grab
 {
@@ -22,8 +21,11 @@ namespace GitDockPanelSuite.Grab
 
     struct GrabUserBuffer
     {
+        //실제 이미지 데이터를 보관하는 배열(메모리 내 이미지 처리, 파일 읽기)
         private byte[] _imageBuffer;
+        //네이티브 코드에 넘기기 위한 포인터(PInvoke, OpenCVSharp, Native SDK)
         private IntPtr _imageBufferPtr;
+        //배열을 고정시켜 포인터 안정성 확보(배열 → 포인터 변환 시 메모리 고정)
         private GCHandle _imageHandle;
 
         public byte[] ImageBuffer
@@ -31,13 +33,11 @@ namespace GitDockPanelSuite.Grab
             get { return _imageBuffer; }
             set { _imageBuffer = value; }
         }
-
         public IntPtr ImageBufferPtr
         {
             get { return _imageBufferPtr; }
             set { _imageBufferPtr = value; }
         }
-
         public GCHandle ImageHandle
         {
             get { return _imageHandle; }
@@ -48,7 +48,6 @@ namespace GitDockPanelSuite.Grab
     internal abstract class GrabModel
     {
         public delegate void GrabEventHandler<T>(object sender, T obj = null) where T : class;
-        // 이벤트 콜백 시 타입 안전성 확보. Grab 결과를 다양한 객체 타입으로 전달 가능
 
         public event GrabEventHandler<object> GrabCompleted; // 그랩 완료시 이벤트
         public event GrabEventHandler<object> TransferCompleted; // 전송 완료시 이벤트
@@ -71,7 +70,7 @@ namespace GitDockPanelSuite.Grab
 
         internal abstract bool Open();
 
-        internal virtual bool Reconnect() { return false; } // 본문 선언 필수!!
+        internal virtual bool Reconnect() { return true; } // 본문 선언 필수!!
 
         internal abstract bool GetPixelBpp(out int pixelBpp);
 
@@ -83,11 +82,11 @@ namespace GitDockPanelSuite.Grab
 
         internal abstract bool GetGain(out float gain);
 
-        internal abstract bool GetResolution(out int width, out int height, out int stirde);
+        internal abstract bool GetResolution(out int width, out int height, out int stride);
 
-        internal virtual bool SetTriggerMode(bool hardwareTrigger) { return false; }
+        internal virtual bool SetTriggerMode(bool hardwareTrigger) { return true; }
+
         internal virtual bool SetWhiteBalance(bool auto, float redGain = 1.0f, float blueGain = 1.0f) { return true; }
-
 
         internal bool InitGrab()
         {
@@ -95,11 +94,12 @@ namespace GitDockPanelSuite.Grab
 
             if (!Open())
             {
-                if(!Reconnect()) return false;
-            };
+                if (!Reconnect()) return false;
+            }
 
             return true;
         }
+
         internal bool InitBuffer(int bufferCount = 1)
         {
             if (bufferCount < 1) return false;
@@ -116,13 +116,11 @@ namespace GitDockPanelSuite.Grab
 
             return true;
         }
-
-        protected void OnGrabCompleted(object obj = null)
+        protected virtual void OnGrabCompleted(object obj = null)
         {
             GrabCompleted?.Invoke(this, obj);
         }
-
-        protected void OnTransferCompleted(object obj = null)
+        protected virtual void OnTransferCompleted(object obj = null)
         {
             TransferCompleted?.Invoke(this, obj);
         }

@@ -15,7 +15,7 @@ namespace GitDockPanelSuite.Algorithm
         public string info;
         public InspectType inspectType;
         public DecisionType decision;
-        public bool UseRotatedRect = false;
+        public bool UseRotatedRect = false; // 회전된 Rect를 사용할지 여부
 
         public DrawInspectInfo()
         {
@@ -41,7 +41,7 @@ namespace GitDockPanelSuite.Algorithm
             rotatedPoints = new Point2f[_rotatedPoints.Length];
             for (int i = 0; i < _rotatedPoints.Length; i++)
             {
-                rotatedPoints[i] = _rotatedPoints[i]; // 값 복사
+                rotatedPoints[i] = _rotatedPoints[i]; // Point2f는 구조체이므로 값 복사됨
             }
             UseRotatedRect = true;
         }

@@ -12,18 +12,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
-using static GitDockPanelSuite.Property.BinaryProp;
 
 namespace GitDockPanelSuite
 {
-    public enum PropertyType
-    {
-        Binary,
-        Filter,
-        AIModule
-    }
+    //#2_DOCKPANEL#4 PropertiesForm 클래스 는 도킹 가능하도록 상속을 변경
 
-    //public partial class PropertiesForm : Form
+    //public partial class PropertiesForm: Form
     public partial class PropertiesForm : DockContent
     {
         Dictionary<string, TabPage> _allTabs = new Dictionary<string, TabPage>();
@@ -82,6 +76,12 @@ namespace GitDockPanelSuite
                     //blobProp.PropertyChanged += PropertyChanged;
                     curProp = blobProp;
                     break;
+                //#11_MATCHING#5 패턴매칭 속성창 추가
+                case InspectType.InspMatch:
+                    MatchInspProp matchProp = new MatchInspProp();
+                    matchProp.PropertyChanged += PropertyChanged;
+                    curProp = matchProp;
+                    break;
                 case InspectType.InspFilter:
                     ImageFilterProp filterProp = new ImageFilterProp();
                     curProp = filterProp;
@@ -129,6 +129,16 @@ namespace GitDockPanelSuite
 
                         binaryProp.SetAlgorithm(blobAlgo);
                     }
+                    else if (uc is MatchInspProp matchProp)
+                    {
+                        MatchAlgorithm matchAlgo = (MatchAlgorithm)window.FindInspAlgorithm(InspectType.InspMatch);
+                        if (matchAlgo is null)
+                            continue;
+
+                        window.PatternLearn();
+
+                        matchProp.SetAlgorithm(matchAlgo);
+                    }
                 }
             }
         }
@@ -136,11 +146,11 @@ namespace GitDockPanelSuite
 
         private void RangeSlider_RangeChanged(object sender, RangeChangedEventArgs e)
         {
+            // 속성값을 이용하여 이진화 임계값 설정
             int lowerValue = e.LowerValue;
             int upperValue = e.UpperValue;
             bool invert = e.Invert;
             ShowBinaryMode showBinMode = e.ShowBinMode;
-
             Global.Inst.InspStage.PreView?.SetBinary(lowerValue, upperValue, invert, showBinMode);
         }
 

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +13,7 @@ namespace GitDockPanelSuite.Property
 {
     public partial class AIModuleProp : UserControl
     {
-        SaigeAI _saigeAI;
+        SaigeAI _saigeAI; // SaigeAI 인스턴스
         string _modelPath = string.Empty;
         AIEngineType _engineType;
         /* _engineType을 선언한 이유는 다른 곳에서 경로를 입력한 이후에 모드를 변경할 수도 있기 때문 */
@@ -23,65 +23,12 @@ namespace GitDockPanelSuite.Property
             InitializeComponent();
 
             // 콤보박스 초기값
-            ComboBox_AIMode.DataSource = Enum.GetValues(typeof(AIEngineType)).Cast<AIEngineType>().ToList();
-            ComboBox_AIMode.SelectedIndex = 0;
+            cbAIModelType.DataSource = Enum.GetValues(typeof(AIEngineType)).Cast<AIEngineType>().ToList();
+            cbAIModelType.SelectedIndex = 0;
         }
 
-        private void Btn_ModelInit_Click(object sender, EventArgs e) // 
-        {
-            if(_saigeAI != null)
-                _saigeAI.Dispose();
 
-            if (_modelPath != string.Empty)
-            {
-                TextBox_ModelPath.Text = null;
-                _modelPath = string.Empty;
-            }
-
-
-            MessageBox.Show("초기화가 완료되었습니다.", "완료", MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1);
-        }
-
-        private void Btn_ModelApply_Click(object sender, EventArgs e)
-        {
-            if (string.IsNullOrEmpty(_modelPath))
-            {
-                MessageBox.Show("모델 파일을 선택해주세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if(_saigeAI == null)
-            { // ai 모듈이 선언이 안 되어있으면 초기화 선언.
-                _saigeAI = Global.Inst.InspStage.AIModule;
-            }
-
-            _saigeAI.LoadEngine(_modelPath, _engineType); // 엔진 로딩
-            MessageBox.Show("모델이 성공적으로 로드되었습니다.", "정보", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        private void Btn_InspAI_Click(object sender, EventArgs e)
-        {
-            if (_saigeAI == null) // AI 모듈이 없으면 검사 불가
-            {
-                MessageBox.Show("AI 모듈이 초기화되지 않았습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            Bitmap bitmap = Global.Inst.InspStage.GetCurrentImage(); // 현재 이미지 가져오기
-            if(bitmap == null)
-            {
-                MessageBox.Show("현재 이미지가 없습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            _saigeAI.InspAIModule(bitmap); // 검사 모듈에 이미지 입력
-
-            Bitmap resultImage = _saigeAI.GetResultImage(); // 결과 이미지 호출
-
-            Global.Inst.InspStage.UpdateDisplay(resultImage); // 결과 이미지 표출
-        }
-
-        private void Btn_ModelFileLoad_Click(object sender, EventArgs e) // 모델 파일 선택
+        private void btnSelAIModel_Click(object sender, EventArgs e) // 모델 파일 선택
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -106,14 +53,53 @@ namespace GitDockPanelSuite.Property
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     _modelPath = openFileDialog.FileName;
-                    TextBox_ModelPath.Text = _modelPath;
+                    txtAIModelPath.Text = _modelPath;
                 }
             }
         }
 
-        private void ComboBox_AIMode_SelectedIndexChanged(object sender, EventArgs e)
+        private void btnLoadModel_Click(object sender, EventArgs e)
         {
-            AIEngineType engineType = (AIEngineType) ComboBox_AIMode.SelectedIndex;
+            if (string.IsNullOrEmpty(_modelPath))
+            {
+                MessageBox.Show("모델 파일을 선택해주세요.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if(_saigeAI == null)
+            { // ai 모듈이 선언이 안 되어있으면 초기화 선언.
+                _saigeAI = Global.Inst.InspStage.AIModule;
+            }
+
+            _saigeAI.LoadEngine(_modelPath, _engineType); // 엔진 로딩
+            MessageBox.Show("모델이 성공적으로 로드되었습니다.", "정보", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        private void btnInspAI_Click(object sender, EventArgs e)
+        {
+            if (_saigeAI == null) // AI 모듈이 없으면 검사 불가
+            {
+                MessageBox.Show("AI 모듈이 초기화되지 않았습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            Bitmap bitmap = Global.Inst.InspStage.GetBitmap();
+            if (bitmap is null)
+            {
+                MessageBox.Show("현재 이미지가 없습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            _saigeAI.InspAIModule(bitmap); // 검사 모듈에 이미지 입력
+            
+            Bitmap resultImage = _saigeAI.GetResultImage(); // 결과 이미지 호출
+
+            Global.Inst.InspStage.UpdateDisplay(resultImage); // 결과 이미지 표출
+        }
+
+        private void cbAIModelType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            AIEngineType engineType = (AIEngineType)cbAIModelType.SelectedItem;
 
             if (engineType != _engineType) // 선택된 엔진 타입과 현재 설정되어있는 엔진 타입이 다름
             {

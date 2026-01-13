@@ -103,6 +103,7 @@
     <Compile Include="Algorithm\BlobAlgorithm.cs" />
     <Compile Include="Algorithm\DrawInspectInfo.cs" />
     <Compile Include="Algorithm\InspAlgorithm.cs" />
+    <Compile Include="Algorithm\MatchAlgorithm.cs" />
     <Compile Include="CameraForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -124,6 +125,12 @@
     <Compile Include="Grab\HikRobotCam.cs" />
     <Compile Include="Grab\WebCam.cs" />
     <Compile Include="Inspect\SaigeAI.cs" />
+    <Compile Include="ModelTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ModelTreeForm.Designer.cs">
+      <DependentUpon>ModelTreeForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Property\AIModuleProp.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -141,6 +148,12 @@
     </Compile>
     <Compile Include="Property\ImageFilterProp.Designer.cs">
       <DependentUpon>ImageFilterProp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\MatchInspProp.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Property\MatchInspProp.Designer.cs">
+      <DependentUpon>MatchInspProp.cs</DependentUpon>
     </Compile>
     <Compile Include="RunForm.cs">
       <SubType>Form</SubType>
@@ -203,19 +216,28 @@
     <Compile Include="StatisticForm.Designer.cs">
       <DependentUpon>StatisticForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UIControl\PatternImageEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIControl\PatternImageEditor.Designer.cs">
+      <DependentUpon>PatternImageEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="UIControl\RangeTrackbar.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="UIControl\RangeTrackbar.Designer.cs">
       <DependentUpon>RangeTrackbar.cs</DependentUpon>
     </Compile>
-    <Compile Include="util\BitmapExtension.cs" />
-    <Compile Include="util\XmlHelper.cs" />
+    <Compile Include="Util\BitmapExtension.cs" />
+    <Compile Include="Util\XmlHelper.cs" />
     <EmbeddedResource Include="CameraForm.resx">
       <DependentUpon>CameraForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ModelTreeForm.resx">
+      <DependentUpon>ModelTreeForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PropertiesForm.resx">
       <DependentUpon>PropertiesForm.cs</DependentUpon>
@@ -238,6 +260,9 @@
     <EmbeddedResource Include="Property\ImageFilterProp.resx">
       <DependentUpon>ImageFilterProp.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Property\MatchInspProp.resx">
+      <DependentUpon>MatchInspProp.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="RunForm.resx">
       <DependentUpon>RunForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -252,6 +277,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UIControl\ImageViewCtrl.resx">
       <DependentUpon>ImageViewCtrl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UIControl\PatternImageEditor.resx">
+      <DependentUpon>PatternImageEditor.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitDockPanelSuite.Algorithm;
+using GitDockPanelSuite.Core;
 
 namespace GitDockPanelSuite.Property
 {
-    public enum ShowBinaryMode
+    public enum ShowBinaryMode : int
     {
         ShowBinaryNone = 0,             // 이진화 하이라이트 끄기
         ShowBinaryHighlightRed,         // Red 하이라이트 보기
@@ -20,13 +21,16 @@ namespace GitDockPanelSuite.Property
         ShowBinaryOnly                  // 배경 없이 이진화 이미지만 보기
     }
 
-    public partial class BinaryProp : UserControl
+    public partial class BinaryProp: UserControl
     {
-        public event EventHandler<EventArgs> PropertyChanged;
+        //속성창의 값이 변경시 발생하는 이벤트
+        //public event EventHandler<EventArgs> PropertyChanged;
+        //양방향 슬라이더 값 변경시 발생하는 이벤트
         public event EventHandler<RangeChangedEventArgs> RangeChanged;
 
         BlobAlgorithm _blobAlgo = null;
 
+        // 속성값을 이용하여 이진화 임계값 설정
         public int LeftValue => binRangeTrackbar.ValueLeft; // getter를 줄인 람다식
         public int RightValue => binRangeTrackbar.ValueRight;
 
@@ -34,6 +38,7 @@ namespace GitDockPanelSuite.Property
         private readonly int COL_USE = 1;
         private readonly int COL_MIN = 2;
         private readonly int COL_MAX = 3;
+
 
         public BinaryProp()
         {
@@ -44,21 +49,24 @@ namespace GitDockPanelSuite.Property
 
             InitializeFilterDataGridView();
 
+            // TrackBar 초기 설정
             binRangeTrackbar.RangeChanged += Range_RangeChanged;
 
             binRangeTrackbar.ValueLeft = 0;
             binRangeTrackbar.ValueRight = 128;
 
+            //이진화 프리뷰 콤보박스 초기화 설정
             cbHighlight.Items.Add("사용안함");
             cbHighlight.Items.Add("빨간색");
             cbHighlight.Items.Add("녹색");
             cbHighlight.Items.Add("파란색");
             cbHighlight.Items.Add("흑백");
-            cbHighlight.SelectedIndex = 0;
+            cbHighlight.SelectedIndex = 0; // 기본값으로 "사용안함" 선택
         }
 
         private void InitializeFilterDataGridView()
         {
+            // 컬럼 설정
             dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
             {
                 HeaderText = "필터명",
@@ -67,7 +75,7 @@ namespace GitDockPanelSuite.Property
                 Width = 70
             });
 
-            dataGridViewFilter.Columns.Add(new DataGridViewTextBoxColumn()
+            dataGridViewFilter.Columns.Add(new DataGridViewCheckBoxColumn()
             {
                 HeaderText = "사용",
                 SortMode = DataGridViewColumnSortMode.NotSortable,
@@ -88,6 +96,7 @@ namespace GitDockPanelSuite.Property
                 Width = 65
             });
 
+            // 항목 추가
             AddFilterRow("Area");
             AddFilterRow("Length");
             AddFilterRow("Width");
@@ -116,6 +125,7 @@ namespace GitDockPanelSuite.Property
             SetProperty();
         }
 
+        //이진화 알고리즘 클래스의 정보를 UI컨트롤러에 적용
         public void SetProperty()
         {
             if(_blobAlgo is null) return;
@@ -135,6 +145,7 @@ namespace GitDockPanelSuite.Property
             chkRotatedRect.Checked = _blobAlgo.UseRotatedRect;
         }
 
+        //UI컨트롤러 값을 이진화 알고리즘 클래스에 적용
         public void GetProperty()
         {
             if (_blobAlgo is null) return;
@@ -146,7 +157,7 @@ namespace GitDockPanelSuite.Property
             int leftValue = LeftValue;
             int rightValue = RightValue;
 
-            if(leftValue < rightValue)
+            if (leftValue < rightValue)
             {
                 threshold.lower = leftValue;
                 threshold.upper = rightValue;
@@ -173,7 +184,7 @@ namespace GitDockPanelSuite.Property
                 _updateDataGridView = false;
                 List<BlobFilter> blobFilters = _blobAlgo.BlobFilters;
 
-                for(int i=0; i<blobFilters.Count; i++)
+                for (int i = 0; i < blobFilters.Count; i++)
                 {
                     if (i >= dataGridViewFilter.Rows.Count) break;
 
@@ -181,7 +192,6 @@ namespace GitDockPanelSuite.Property
                     dataGridViewFilter.Rows[i].Cells[COL_MIN].Value = blobFilters[i].min;
                     dataGridViewFilter.Rows[i].Cells[COL_MAX].Value = blobFilters[i].max;
                 }
-
                 _updateDataGridView = true;
             }
             else
@@ -190,7 +200,7 @@ namespace GitDockPanelSuite.Property
             
                 List<BlobFilter> blobFilters = _blobAlgo.BlobFilters;
 
-                for(int i = 0; i < blobFilters.Count; i++)
+                for (int i = 0; i < blobFilters.Count; i++)
                 {
                     BlobFilter blobFilter = blobFilters[i];
                     blobFilter.isUse = (bool)dataGridViewFilter.Rows[i].Cells[COL_USE].Value;
@@ -198,7 +208,7 @@ namespace GitDockPanelSuite.Property
                     object value = dataGridViewFilter.Rows[i].Cells[COL_MIN].Value;
 
                     int min = 0;
-                    if(value != null && int.TryParse(value.ToString(), out min))
+                    if (value != null && int.TryParse(value.ToString(), out min))
                         blobFilter.min = min;
 
                     value = dataGridViewFilter.Rows[i].Cells[COL_MAX].Value;
@@ -210,6 +220,7 @@ namespace GitDockPanelSuite.Property
             }
         }
 
+        //이진화 옵션을 선택할때마다, 이진화 이미지가 갱신되도록 하는 함수
         private void UpdateBinary()
         {
             GetProperty();
@@ -218,7 +229,7 @@ namespace GitDockPanelSuite.Property
             int rightValue = RightValue;
             bool invert = false;
 
-            if(leftValue > rightValue)
+            if (leftValue > rightValue)
             {
                 leftValue = RightValue;
                 rightValue = LeftValue;
@@ -229,7 +240,8 @@ namespace GitDockPanelSuite.Property
             RangeChanged?.Invoke(this, new RangeChangedEventArgs(leftValue, rightValue, invert, showBinaryMode));
         }
 
-        public void Range_RangeChanged(object sender, EventArgs e)
+        //GUI 이벤트와 UpdateBinary함수 연동
+        private void Range_RangeChanged(object sender, EventArgs e)
         {
             UpdateBinary();
         }
@@ -244,6 +256,7 @@ namespace GitDockPanelSuite.Property
             GetProperty();
         }
 
+        //콤보박스 변경시 이진화 프리뷰 갱신
         private void cbHighlight_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateBinary();
@@ -256,6 +269,8 @@ namespace GitDockPanelSuite.Property
                 UpdateDataGridView(false);
         }
 
+        // DataGridView안에 있는 체크박스의 경우, CellValueChanged가 발생하지 않아,
+        // CellDirtyStateChanged 이벤트를 사용하여 체크박스의 상태가 변경될 때 CommitEdit을 호출합니다.
         private void dataGridViewFilter_CurrentCellDirtyStateChanged(object sender, EventArgs e)
         {
             if (dataGridViewFilter.CurrentCell is DataGridViewCheckBoxCell)
@@ -276,15 +291,16 @@ namespace GitDockPanelSuite.Property
             if (_blobAlgo is null) return;
 
             _blobAlgo.BinMethod = (BinaryMethod)cbBinMethod.SelectedIndex;
-            chkRotatedRect.Enabled = _blobAlgo.BinMethod == BinaryMethod.Feature; // 왜 ==이 있는가?
+            chkRotatedRect.Enabled = _blobAlgo.BinMethod == BinaryMethod.Feature; // 왜 ?가 있는가?
 
             if (_blobAlgo.BinMethod == BinaryMethod.PixelCount)
             {
                 for (int i = 0; i < dataGridViewFilter.Rows.Count; i++)
                 {
-                    bool useFeature = (i == 0 ? true : false);
+                    bool useFeature = i == 0 ? true : false; // Area 필터만 사용 가능
                     dataGridViewFilter.Rows[i].Cells[COL_USE].Value = useFeature;
                 }
+                dataGridViewFilter.Columns[COL_USE].ReadOnly = true;
             }
             else
             {
@@ -294,19 +310,22 @@ namespace GitDockPanelSuite.Property
             _updateDataGridView = true;
         }
 
-        public class RangeChangedEventArgs : EventArgs
+    }
+
+    //이진화 관련 이벤트 발생시, 전달할 값 추가
+    public class RangeChangedEventArgs : EventArgs
+    {
+        public int LowerValue { get; }
+        public int UpperValue { get; }
+        public bool Invert { get; }
+        public ShowBinaryMode ShowBinMode { get; }
+
+        public RangeChangedEventArgs(int lowerValue, int upperValue, bool invert, ShowBinaryMode showBinaryMode)
         {
-            public int LowerValue { get; set; }
-            public int UpperValue { get; set; }
-            public bool Invert { get; set; }
-            public ShowBinaryMode ShowBinMode { get; set; }
-            public RangeChangedEventArgs(int lowerValue, int upperValue, bool invert, ShowBinaryMode showBinaryMode)
-            {
-                LowerValue = lowerValue;
-                UpperValue = upperValue;
-                Invert = invert;
-                ShowBinMode = showBinaryMode;
-            }
+            LowerValue = lowerValue;
+            UpperValue = upperValue;
+            Invert = invert;
+            ShowBinMode = showBinaryMode;
         }
     }
 }

@@ -1,15 +1,16 @@
 ﻿using GitDockPanelSuite.Algorithm;
 using GitDockPanelSuite.Grab;
+using GitDockPanelSuite.Teach;
+using GitDockPanelSuite.Setting;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenCvSharp;
-using OpenCvSharp.Extensions;
-using GitDockPanelSuite.Setting;
-using GitDockPanelSuite.Teach;
 
 namespace GitDockPanelSuite.Core
 {
@@ -20,16 +21,16 @@ namespace GitDockPanelSuite.Core
         private ImageSpace _imageSpace = null; // Grab된 원본 이미지 및 분할 이미지 관리
         //private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
         private GrabModel _grabManager = null;
-        public CameraType _camType = CameraType.WebCam;
+        private CameraType _camType = CameraType.WebCam;
+        
         SaigeAI _saigeAI; // AI 모듈
 
-        BlobAlgorithm _blobAlgorithm = null; // 블롭 알고리즘 인스턴스
+        //  BlobAlgorithm _blobAlgorithm = null; // 블롭 알고리즘 인스턴스
         private PreviewImage _previewImage = null; // 미리보기 이미지 변수
 
         private Model _model = null;
 
         private InspWindow _selectedInspWindow = null;
-
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -44,12 +45,7 @@ namespace GitDockPanelSuite.Core
                 if (_saigeAI is null)
                     _saigeAI = new SaigeAI();
                 return _saigeAI;
-            }
-        }
-
-        public BlobAlgorithm BlobAlgorithm
-        {
-            get => _blobAlgorithm;
+            }                
         }
 
         public PreviewImage PreView
@@ -63,6 +59,10 @@ namespace GitDockPanelSuite.Core
         }
 
         public bool LiveMode { get; set; } = false; // 라이브 모드 여부
+
+        public int SelBufferIndex { get; set; } = 0;
+        public eImageChannel SelImageChannel { get; set; } = eImageChannel.Gray;
+
 
         public bool Initialize()
         {
@@ -90,7 +90,7 @@ namespace GitDockPanelSuite.Core
             }
 
 
-            if (_grabManager != null && _grabManager.InitGrab() == true) // Grab 초기화
+            if (_grabManager != null && _grabManager.InitGrab()) // Grab 초기화
             {
                 _grabManager.TransferCompleted += _multiGrab_TransferCompleted; // Grab 성공 시 이벤트 연결
 
@@ -115,22 +115,23 @@ namespace GitDockPanelSuite.Core
 
             int inspectionWidth;
             int inspectionHeight;
-            int inspectStride;
-            _grabManager.GetResolution(out inspectionWidth, out inspectionHeight, out inspectStride); // 해상도/Stride 받아오기
+            int inspectionStride;
+            _grabManager.GetResolution(out inspectionWidth, out inspectionHeight, out inspectionStride); // 해상도/Stride 받아오기
 
             if (_imageSpace != null)
             {
-                // ImageSpace에 이미지 정보 설정
-                _imageSpace.SetImageInfo(pixelBpp, inspectionWidth, inspectionHeight, inspectStride);
+            	// ImageSpace에 이미지 정보 설정
+                _imageSpace.SetImageInfo(pixelBpp, inspectionWidth, inspectionHeight, inspectionStride);
             }
 
             SetBuffer(bufferCount); // 버퍼 개수 설정
 
-
-            //UpdateProperty();
+            //_grabManager.SetExposureTime(25000);
         }
 
-        public void UpdateProperty(InspWindow inspWindow)
+
+        //#10_INSPWINDOW#11 속성창 업데이트 기준을 알고리즘에서 InspWindow로 변경
+        private void UpdateProperty(InspWindow inspWindow)
         {
             if (inspWindow is null)
                 return;
@@ -140,6 +141,67 @@ namespace GitDockPanelSuite.Core
                 return;
 
             propertiesForm.UpdateProperty(inspWindow);
+        }
+
+        //#11_MATCHING#6 패턴매칭 속성창과 연동된 패턴 이미지 관리 함수
+        public void UpdateTeachingImage(int index)
+        {
+            if (_selectedInspWindow is null)
+                return;
+
+            SetTeachingImage(_selectedInspWindow, index);
+        }
+
+        public void DelTeachingImage(int index)
+        {
+            if (_selectedInspWindow is null)
+                return;
+
+            InspWindow inspWindow = _selectedInspWindow;
+
+            inspWindow.DelWindowImage(index);
+
+            MatchAlgorithm matchAlgo = (MatchAlgorithm)inspWindow.FindInspAlgorithm(InspectType.InspMatch);
+            if (matchAlgo != null)
+            {
+                UpdateProperty(inspWindow);
+            }
+        }
+
+        public void SetTeachingImage(InspWindow inspWindow, int index = -1)
+        {
+            if (inspWindow is null)
+                return;
+
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm is null)
+                return;
+
+            Mat curImage = cameraForm.GetDisplayImage();
+            if (curImage is null)
+                return;
+
+            if (inspWindow.WindowArea.Right >= curImage.Width ||
+                inspWindow.WindowArea.Bottom >= curImage.Height)
+            {
+                Console.Write("ROI 영역이 잘못되었습니다!");
+                return;
+            }
+
+            Mat windowImage = curImage[inspWindow.WindowArea];
+
+            if (index < 0)
+                inspWindow.AddWindowImage(windowImage);
+            else
+                inspWindow.SetWindowImage(windowImage, index);
+
+            inspWindow.IsPatternLearn = false;
+
+            MatchAlgorithm matchAlgo = (MatchAlgorithm)inspWindow.FindInspAlgorithm(InspectType.InspMatch);
+            if (matchAlgo != null)
+            {
+                UpdateProperty(inspWindow);
+            }
         }
 
         public void SetBuffer(int bufferCount)
@@ -163,11 +225,11 @@ namespace GitDockPanelSuite.Core
         }
 
 
-        public void TryInspection(InspWindow inspWindow)
+        public void TryInspection(InspWindow inspWindow = null)
         {
             if (inspWindow is null)
             {
-                if (_selectedInspWindow is null)
+                if(_selectedInspWindow is null)
                     return;
 
                 inspWindow = _selectedInspWindow;
@@ -181,12 +243,16 @@ namespace GitDockPanelSuite.Core
 
             foreach (var inspAlgo in inspWindow.AlgorithmList)
             {
+                if (!inspAlgo.IsUse)
+                    continue;
+
+                //검사 영역 초기화
                 inspAlgo.TeachRect = windowArea;
                 inspAlgo.InspRect = windowArea;
 
-                InspectType insptype = inspAlgo.InspectType;
+                InspectType inspType = inspAlgo.InspectType;
 
-                switch (insptype)
+                switch (inspType)
                 {
                     case InspectType.InspBinary:
                         {
@@ -194,6 +260,16 @@ namespace GitDockPanelSuite.Core
 
                             Mat srcImage = Global.Inst.InspStage.GetMat();
                             blobAlgo.SetInspData(srcImage);
+
+                            /*if(blobAlgo.DoInspect())
+                            {
+                                List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
+                                int resultCnt = blobAlgo.GetResultRect(out resultArea);
+                                if (resultCnt > 0)
+                                {
+                                    totalArea.AddRange(resultArea);
+                                }
+                            }*/
 
                             break;
                         }
@@ -204,7 +280,19 @@ namespace GitDockPanelSuite.Core
                     List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
                     int resultCnt = inspAlgo.GetResultRect(out resultArea);
                     if (resultCnt > 0)
+                    {
                         totalArea.AddRange(resultArea);
+                    }
+                }
+            }
+
+            if (totalArea.Count > 0)
+            {
+                //찾은 위치를 이미지상에서 표시
+                var cameraForm = MainForm.GetDockForm<CameraForm>();
+                if (cameraForm != null)
+                {
+                    cameraForm.AddRect(totalArea);
                 }
             }
         }
@@ -214,7 +302,6 @@ namespace GitDockPanelSuite.Core
             _selectedInspWindow = inspWindow;
 
             var propForm = MainForm.GetDockForm<PropertiesForm>();
-
             if (propForm != null)
             {
                 if (inspWindow is null)
@@ -223,6 +310,7 @@ namespace GitDockPanelSuite.Core
                     return;
                 }
 
+                //속성창을 현재 선택된 ROI에 대한 것으로 변경
                 propForm.ShowProperty(inspWindow);
             }
 
@@ -231,33 +319,96 @@ namespace GitDockPanelSuite.Core
             Global.Inst.InspStage.PreView.SetInspWindow(inspWindow);
         }
 
-        /*private bool DisplayResult()
+        //ImageViwer에서 ROI를 추가하여, InspWindow생성하는 함수
+        public void AddInspWindow(InspWindowType windowType, Rect rect)
         {
-            if (_blobAlgorithm is null)
+            InspWindow inspWindow = _model.AddInspWindow(windowType);
+            if (inspWindow is null)
+                return;
+
+            inspWindow.WindowArea = rect;
+            inspWindow.IsTeach = false;
+
+            //#11_MATCHING#7 새로운 ROI가 추가되면, 티칭 이미지 추가
+            SetTeachingImage(inspWindow);
+            UpdateProperty(inspWindow);
+            UpdateDiagramEntity();
+
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+            {
+                cameraForm.SelectDiagramEntity(inspWindow);
+                SelectInspWindow(inspWindow);
+            }
+        }
+
+        public bool AddInspWindow(InspWindow sourceWindow, OpenCvSharp.Point offset)
+        {
+            InspWindow cloneWindow = sourceWindow.Clone(offset);
+            if (cloneWindow is null)
                 return false;
 
-            List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
-            int resultCnt = _blobAlgorithm.GetResultRect(out resultArea);
-            if (resultCnt > 0)
+            if (!_model.AddInspWindow(cloneWindow))
+                return false;
+
+            UpdateProperty(cloneWindow);
+            UpdateDiagramEntity();
+
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
             {
-                var cameraForm = MainForm.GetDockForm<CameraForm>();
-                if (cameraForm != null)
-                {
-                    cameraForm.ResetDisplay();
-                    cameraForm.AddRect(resultArea);
-                }
+                cameraForm.SelectDiagramEntity(cloneWindow);
+                SelectInspWindow(cloneWindow);
             }
 
             return true;
-        }*/
+        }
 
-        public void Grab(int bufferIndex) // 지정된 버퍼로 Grab 실행
+
+        //입력된 윈도우 이동
+        public void MoveInspWindow(InspWindow inspWindow, OpenCvSharp.Point offset)
+        {
+            if (inspWindow == null)
+                return;
+
+            inspWindow.OffsetMove(offset);
+            UpdateProperty(inspWindow);
+        }
+
+        //#MODEL#10 기존 ROI 수정되었을때, 그 정보를 InspWindow에 반영
+        public void ModifyInspWindow(InspWindow inspWindow, Rect rect)
+        {
+            if (inspWindow == null)
+                return;
+
+            inspWindow.WindowArea = rect;
+            inspWindow.IsTeach = false;
+            
+            UpdateProperty(inspWindow);
+        }
+
+        //#MODEL#11 InspWindow 삭제하기
+        public void DelInspWindow(InspWindow inspWindow)
+        {
+            _model.DelInspWindow(inspWindow);
+            UpdateDiagramEntity();
+        }
+
+
+        public void DelInspWindow(List<InspWindow> inspWindowList)
+        {
+            _model.DelInspWindowList(inspWindowList);
+            UpdateDiagramEntity();
+        }
+
+        public void Grab(int bufferIndex)
         {
             if (_grabManager == null) return;
 
             _grabManager.Grab(bufferIndex, true);
         }
 
+        //영상 취득 완료 이벤트 발생시 후처리
         private async void _multiGrab_TransferCompleted(object sender, object e)
         {
             int bufferIndex = (int)e;
@@ -272,10 +423,12 @@ namespace GitDockPanelSuite.Core
                 _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
             }
 
+            //#8_LIVE#2 LIVE 모드일때, Grab을 계속 실행하여, 반복되도록 구현
+            //이 함수는 await를 사용하여 비동기적으로 실행되어, 함수를 async로 선언해야 합니다.
             if (LiveMode)
             {
-                await Task.Delay(100);
-                _grabManager.Grab(bufferIndex, true);
+                await Task.Delay(100);  // 비동기 대기
+                _grabManager.Grab(bufferIndex, true);  // 다음 촬영 시작
             }
         }
 
@@ -297,18 +450,6 @@ namespace GitDockPanelSuite.Core
             }
         }
 
-        public Bitmap GetCurrentImage() // 현재 화면에 표시 중인 이미지 반환
-        {
-            Bitmap bitmap = null;
-            var cameraForm = MainForm.GetDockForm<CameraForm>();
-            if (cameraForm != null)
-            {
-                bitmap = cameraForm.GetDisplayImage();
-            }
-
-            return bitmap;
-        }
-
         public Bitmap GetBitmap(int bufferIndex = -1)
         {
             // Global을 통해 다시 InspStage → ImageSpace 접근
@@ -318,9 +459,17 @@ namespace GitDockPanelSuite.Core
             return Global.Inst.InspStage.ImageSpace.GetBitmap();
         }
 
-        public Mat GetMat()
+        //#7_BINARY_PREVIEW#4 이진화 프리뷰를 위해, ImageSpace에서 이미지 가져오기
+        public Mat GetMat(int bufferIndex = -1, eImageChannel imageChannel = eImageChannel.None)
         {
-            return Global.Inst.InspStage.ImageSpace.GetMat();
+            if (bufferIndex >= 0)
+                SelBufferIndex = bufferIndex;
+
+            //#BINARY FILTER#14 채널 정보가 유지되도록, eImageChannel.None 타입을 추가
+            if (imageChannel != eImageChannel.None)
+                SelImageChannel = imageChannel;
+
+            return Global.Inst.InspStage.ImageSpace.GetMat(SelBufferIndex, SelImageChannel);
         }
 
         public void UpdateDiagramEntity()
@@ -331,11 +480,11 @@ namespace GitDockPanelSuite.Core
                 cameraForm.UpdateDiagramEntity();
             }
 
-            /*ModelTreeForm modelTreeForm = MainForm.GetDockForm<ModelTreeForm>();
+            ModelTreeForm modelTreeForm = MainForm.GetDockForm<ModelTreeForm>();
             if (modelTreeForm != null)
             {
                 modelTreeForm.UpdateDiagramEntity();
-            }*/
+            }
         }
 
         public void RedrawMainView()
@@ -347,6 +496,7 @@ namespace GitDockPanelSuite.Core
             }
         }
 
+
         #region Disposable
         private bool disposed = false; // Dispose 호출 여부
 
@@ -356,13 +506,13 @@ namespace GitDockPanelSuite.Core
             {
                 if (disposing)
                 {
+                    // Dispose managed resources.
                     if (_saigeAI != null)
                     {
                         _saigeAI.Dispose(); // AI 모듈 해제
                         _saigeAI = null;
                     }
-
-                    if (_grabManager != null)
+                    if(_grabManager != null)
                     {
                         _grabManager.Dispose(); // 카메라 Grab 리소스 해제
                         _grabManager = null;
@@ -377,6 +527,7 @@ namespace GitDockPanelSuite.Core
         {
             Dispose(true);
         }
-        #endregion
+
+        #endregion //Disposable
     }
 }

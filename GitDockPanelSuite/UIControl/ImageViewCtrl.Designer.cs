@@ -1,6 +1,4 @@
-﻿using System.Windows.Forms;
-
-namespace GitDockPanelSuite
+﻿namespace GitDockPanelSuite.UIControl
 {
     partial class ImageViewCtrl
     {
@@ -32,12 +30,15 @@ namespace GitDockPanelSuite
         {
             this.SuspendLayout();
             // 
-            // ImageViewControl
+            // ImageViewCtrl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "ImageViewControl";
+            this.Name = "ImageViewCtrl";
             this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.ImageViewCtrl_MouseDoubleClick);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ImageViewCtrl_MouseDown);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.ImageViewCtrl_MouseMove);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.ImageViewCtrl_MouseUp);
             this.Resize += new System.EventHandler(this.ImageViewCtrl_Resize);
             this.ResumeLayout(false);
 

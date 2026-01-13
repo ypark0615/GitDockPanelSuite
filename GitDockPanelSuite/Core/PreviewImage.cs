@@ -17,8 +17,7 @@ namespace GitDockPanelSuite.Core
         private Mat _previewImage = null;
 
         private InspWindow _inspWindow = null;
-        
-        private bool _userPreview = true;
+        private bool _usePreview = true;
 
         public void SetImage(Mat image)
         {
@@ -33,7 +32,7 @@ namespace GitDockPanelSuite.Core
 
         public void SetBinary(int lowerValue, int upperValue, bool invert, ShowBinaryMode showBinMode)
         {
-            if (!_userPreview) return;
+            if (!_usePreview) return;
 
             if (_originalImage == null) return;
 
@@ -41,7 +40,7 @@ namespace GitDockPanelSuite.Core
             if (cameraForm == null) return;
 
             Bitmap bmpImage;
-            if(showBinMode == ShowBinaryMode.ShowBinaryNone)
+            if (showBinMode == ShowBinaryMode.ShowBinaryNone)
             {
                 bmpImage = BitmapConverter.ToBitmap(_originalImage);
                 cameraForm.UpdateDisplay(bmpImage);
@@ -58,10 +57,10 @@ namespace GitDockPanelSuite.Core
             Mat orgRoi = _originalImage[windowArea];
 
             Mat grayImage = new Mat();
-            if(orgRoi.Type() == MatType.CV_8UC3)
+            if (orgRoi.Type() == MatType.CV_8UC3)
                 Cv2.CvtColor(orgRoi, grayImage, ColorConversionCodes.BGR2GRAY);
             else
-                grayImage = orgRoi.Clone();
+                grayImage = orgRoi;
 
             Mat binaryMask = new Mat();
             Cv2.InRange(grayImage, lowerValue, upperValue, binaryMask);
@@ -69,12 +68,13 @@ namespace GitDockPanelSuite.Core
             if (invert)
                 binaryMask = ~binaryMask;
 
+            // binaryMask는 ROI 사이즈이므로 fullBinaryMask로 확장
             Mat fullBinaryMask = Mat.Zeros(_originalImage.Size(), MatType.CV_8UC1);
             binaryMask.CopyTo(new Mat(fullBinaryMask, windowArea));
 
-            if(showBinMode == ShowBinaryMode.ShowBinaryOnly)
+            if (showBinMode == ShowBinaryMode.ShowBinaryOnly)
             {
-                if(orgRoi.Type() == MatType.CV_8UC3)
+                if (orgRoi.Type() == MatType.CV_8UC3)
                 {
                     Mat colorBinary = new Mat();
                     Cv2.CvtColor(binaryMask, colorBinary, ColorConversionCodes.GRAY2BGR);
@@ -87,20 +87,20 @@ namespace GitDockPanelSuite.Core
                     binaryMask.CopyTo(new Mat(_previewImage, windowArea));
                 }
 
-
                 bmpImage = BitmapConverter.ToBitmap(_previewImage);
                 cameraForm.UpdateDisplay(bmpImage);
                 return;
             }
 
             Scalar highlightColor;
-            if(showBinMode == ShowBinaryMode.ShowBinaryHighlightRed)
-                highlightColor = new Scalar(0,0,255);
-            else if(showBinMode == ShowBinaryMode.ShowBinaryHighlightGreen)
-                highlightColor = new Scalar(0,255,0);
-            else //if(showBinMode == ShowBinaryMode.ShowBinaryHighlightBlue)
-                highlightColor = new Scalar(255,0,0);
+            if (showBinMode == ShowBinaryMode.ShowBinaryHighlightRed)
+                highlightColor = new Scalar(0, 0, 255);
+            else if (showBinMode == ShowBinaryMode.ShowBinaryHighlightGreen)
+                highlightColor = new Scalar(0, 255, 0);
+            else //(showBinMode == ShowBinaryMode.ShowBinaryHighlightBlue)
+                highlightColor = new Scalar(255, 0, 0);
 
+            // 원본 이미지 복사본을 만들어 이진화된 부분에만 색을 덧씌우기
             Mat overlayImage;
             if(_originalImage.Type() == MatType.CV_8UC1)
             {
@@ -109,7 +109,7 @@ namespace GitDockPanelSuite.Core
 
                 Mat colorOriginal = overlayImage.Clone();
 
-                overlayImage.SetTo(highlightColor, fullBinaryMask);
+                overlayImage.SetTo(highlightColor, fullBinaryMask); // 빨간색으로 마스킹
 
                 Cv2.AddWeighted(colorOriginal, 0.7, overlayImage, 0.3, 0, _previewImage);
             }

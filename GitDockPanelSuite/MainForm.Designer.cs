@@ -28,29 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.NameMenu = new System.Windows.Forms.MenuStrip();
+            this.mainMenu = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageOpenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageSaveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setupToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
-            this.NameMenu.SuspendLayout();
+            this.mainMenu.SuspendLayout();
             this.SuspendLayout();
             // 
-            // NameMenu
+            // mainMenu
             // 
-            this.NameMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
-            this.NameMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.NameMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.mainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.setupToolStripMenuItem});
-            this.NameMenu.Location = new System.Drawing.Point(0, 0);
-            this.NameMenu.Name = "NameMenu";
-            this.NameMenu.Size = new System.Drawing.Size(1318, 33);
-            this.NameMenu.TabIndex = 4;
-            this.NameMenu.Text = "menuStrip1";
+            this.mainMenu.Location = new System.Drawing.Point(0, 0);
+            this.mainMenu.Name = "mainMenu";
+            this.mainMenu.Size = new System.Drawing.Size(800, 24);
+            this.mainMenu.TabIndex = 0;
+            this.mainMenu.Text = "menuStrip1";
             // 
             // fileToolStripMenuItem
             // 
@@ -58,20 +54,20 @@
             this.imageOpenToolStripMenuItem,
             this.imageSaveToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(55, 29);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // imageOpenToolStripMenuItem
             // 
             this.imageOpenToolStripMenuItem.Name = "imageOpenToolStripMenuItem";
-            this.imageOpenToolStripMenuItem.Size = new System.Drawing.Size(216, 34);
+            this.imageOpenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.imageOpenToolStripMenuItem.Text = "Image Open";
             this.imageOpenToolStripMenuItem.Click += new System.EventHandler(this.imageOpenToolStripMenuItem_Click);
             // 
             // imageSaveToolStripMenuItem
             // 
             this.imageSaveToolStripMenuItem.Name = "imageSaveToolStripMenuItem";
-            this.imageSaveToolStripMenuItem.Size = new System.Drawing.Size(216, 34);
+            this.imageSaveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.imageSaveToolStripMenuItem.Text = "Image Save";
             // 
             // setupToolStripMenuItem
@@ -79,30 +75,28 @@
             this.setupToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.setupToolStripMenuItem1});
             this.setupToolStripMenuItem.Name = "setupToolStripMenuItem";
-            this.setupToolStripMenuItem.Size = new System.Drawing.Size(75, 29);
+            this.setupToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
             this.setupToolStripMenuItem.Text = "Setup";
             // 
             // setupToolStripMenuItem1
             // 
             this.setupToolStripMenuItem1.Name = "setupToolStripMenuItem1";
-            this.setupToolStripMenuItem1.Size = new System.Drawing.Size(270, 34);
+            this.setupToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
             this.setupToolStripMenuItem1.Text = "Setup";
             this.setupToolStripMenuItem1.Click += new System.EventHandler(this.SetupMenuItem_Click);
             // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.FileName = "openFileDialog";
-            // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1318, 752);
-            this.Controls.Add(this.NameMenu);
+            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.mainMenu);
+            this.MainMenuStrip = this.mainMenu;
             this.Name = "MainForm";
-            this.Text = "Form1";
-            this.NameMenu.ResumeLayout(false);
-            this.NameMenu.PerformLayout();
+            this.Text = "MainForm";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.mainMenu.ResumeLayout(false);
+            this.mainMenu.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -110,12 +104,10 @@
 
         #endregion
 
-        private System.Windows.Forms.MenuStrip NameMenu;
+        private System.Windows.Forms.MenuStrip mainMenu;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem imageOpenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem imageSaveToolStripMenuItem;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
-        private System.Windows.Forms.SaveFileDialog saveFileDialog;
         private System.Windows.Forms.ToolStripMenuItem setupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem setupToolStripMenuItem1;
     }

@@ -13,6 +13,7 @@ using WeifenLuo.WinFormsUI.Docking;
 using OpenCvSharp;
 using GitDockPanelSuite.Algorithm;
 using GitDockPanelSuite.Teach;
+using GitDockPanelSuite.UIControl;
 
 namespace GitDockPanelSuite
 {
@@ -21,24 +22,94 @@ namespace GitDockPanelSuite
         public CameraForm()
         {
             InitializeComponent();
+
+            //#10_INSPWINDOW#23 ImageViewCtrl에서 발생하는 이벤트 처리
+            imageViewer.DiagramEntityEvent += ImageViewer_DiagramEntityEvent;
         }
 
+        private void ImageViewer_DiagramEntityEvent(object sender, DiagramEntityEventArgs e)
+        {
+            switch (e.ActionType)
+            {
+                case EntityActionType.Select:
+                    Global.Inst.InspStage.SelectInspWindow(e.InspWindow);
+                    imageViewer.Focus();
+                    break;
+                case EntityActionType.Inspect:
+                    UpdateDiagramEntity();
+                    Global.Inst.InspStage.TryInspection(e.InspWindow);
+                    break;
+                case EntityActionType.Add:
+                    Global.Inst.InspStage.AddInspWindow(e.WindowType, e.Rect);
+                    break;
+                case EntityActionType.Copy:
+                    Global.Inst.InspStage.AddInspWindow(e.InspWindow, e.OffsetMove);
+                    break;
+                case EntityActionType.Move:
+                    Global.Inst.InspStage.MoveInspWindow(e.InspWindow, e.OffsetMove);
+                    break;
+                case EntityActionType.Resize:
+                    Global.Inst.InspStage.ModifyInspWindow(e.InspWindow, e.Rect);
+                    break;
+                case EntityActionType.Delete:
+                    Global.Inst.InspStage.DelInspWindow(e.InspWindow);
+                    break;
+                case EntityActionType.DeleteList:
+                    Global.Inst.InspStage.DelInspWindow(e.InspWindowList);
+                    break;
+            }
+        }
+
+        //#3_CAMERAVIEW_PROPERTY#1 이미지 경로를 받아 PictureBox에 이미지를 로드하는 메서드
         public void LoadImage(string filePath)
         {
-            if(File.Exists(filePath) == false) return;
+            if (File.Exists(filePath) == false)
+                return;
 
             Image bitmap = Image.FromFile(filePath);
-            ImageViewer.LoadBitmap(new Bitmap(bitmap));
+            imageViewer.LoadBitmap((Bitmap)bitmap);
+        }
+
+        public Mat GetDisplayImage()
+        {
+            return Global.Inst.InspStage.ImageSpace.GetMat();
         }
 
         private void CameraForm_Resize(object sender, EventArgs e)
         {
             int margin = 0;
-            ImageViewer.Width = this.Width - margin * 2;
-            ImageViewer.Height = this.Height - margin * 2;
+            imageViewer.Width = this.Width - margin * 2;
+            imageViewer.Height = this.Height - margin * 2;
 
-            ImageViewer.Location = new System.Drawing.Point(margin, margin);
+            imageViewer.Location = new System.Drawing.Point(margin, margin);
         }
+
+        public void UpdateDisplay(Bitmap bitmap = null)
+        {
+            if (bitmap == null)
+            {
+                //#6_INSP_STAGE#3 업데이트시 bitmap이 없다면 InspSpace에서 가져온다
+                bitmap = Global.Inst.InspStage.GetBitmap(0);
+                if (bitmap == null)
+                    return;
+            }
+
+            if (imageViewer != null)
+                imageViewer.LoadBitmap(bitmap);
+
+            //#7_BINARY_PREVIEW#10 현재 선택된 이미지로 Previwe이미지 갱신
+            //이진화 프리뷰에서 각 채널별로 설정이 적용되도록, 현재 이미지를 프리뷰 클래스 설정            
+            Mat curImage = Global.Inst.InspStage.GetMat();
+            Global.Inst.InspStage.PreView.SetImage(curImage);
+        }
+
+        public void UpdateImageViewer()
+        {
+            imageViewer.UpdateInspParam();
+            imageViewer.Invalidate();
+        }
+
+        //#10_INSPWINDOW#23 모델 정보를 이용해, ROI 갱신
         public void UpdateDiagramEntity()
         {
             imageViewer.ResetEntity();
@@ -71,42 +142,22 @@ namespace GitDockPanelSuite
             imageViewer.SelectDiagramEntity(window);
         }
 
-        public void UpdateDisplay(Bitmap bitmap = null)
-        {
-            if (bitmap == null) // bitmap이 전달되지 않았으면
-            {
-                bitmap = Global.Inst.InspStage.GetBitmap(); // Global.Inst.InspStage에서 현재 Grab된 버퍼 이미지 획득
-                if (bitmap == null) return; // 표시할 이미지가 없으면 종료
-            }
-
-            if(ImageViewer != null)
-                ImageViewer.LoadBitmap(bitmap); // ImageViewer가 존재할 경우 Bitmap을 로드하여 화면 갱신
-        
-            Mat curImage = Global.Inst.InspStage.GetMat();
-            Global.Inst.InspStage.PreView.SetImage(curImage);
-        }
-        public Bitmap GetDisplayImage()
-        {
-            Bitmap curImage = null;
-
-            if (ImageViewer != null) // ImageViewer가 존재하면
-                curImage = ImageViewer.GetCurBitmap(); // 현재 화면에 표시 중인 Bitmap 반환
-
-            return curImage;
-        }
-
-        public void UpdateImageViewer()
-        {
-            ImageViewer.Invalidate(); // ImageViewer 컨트롤을 무효화하여 다시 그리도록 요청
-        }
+        //#8_INSPECT_BINARY#18 ImageViewer에 검사 결과 정보를 연결해주기 위한 함수
         public void ResetDisplay()
         {
-            ImageViewer.ResetEntity();
+            imageViewer.ResetEntity();
         }
 
+        //FIXME 검사 결과를 그래픽으로 출력하기 위한 정보를 받는 함수
         public void AddRect(List<DrawInspectInfo> rectInfos)
         {
-            ImageViewer.AddRect(rectInfos);
+            imageViewer.AddRect(rectInfos);
+        }
+
+        //#10_INSPWINDOW#24 새로운 ROI를 추가하는 함수
+        public void AddRoi(InspWindowType inspWindowType)
+        {
+            imageViewer.NewRoi(inspWindowType);
         }
     }
 }

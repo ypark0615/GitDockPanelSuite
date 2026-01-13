@@ -13,10 +13,10 @@ namespace GitDockPanelSuite.Setting
     public enum SettingType
     {
         SettingPath = 0,
-        SettingCamera,
+        SettingCamera
     }
 
-    public partial class SetupForm : Form
+    public partial class SetupForm: Form
     {
         public SetupForm()
         {
@@ -27,17 +27,22 @@ namespace GitDockPanelSuite.Setting
 
         private void InitTabControl()
         {
+            //카메라 설정 페이지 추가
             CameraSetting cameraSetting = new CameraSetting();
-            AddTabContorl(cameraSetting, "Camera");
+            AddTabControl(cameraSetting, "Camera");
 
+            //경로 설정 페이지 추가
             PathSetting pathSetting = new PathSetting();
-            AddTabContorl(pathSetting, "Path");
+            AddTabControl(pathSetting, "Path");
 
+            //기본값으로 카메라 설정 페이지 보이도록 설정
             tabSetting.SelectTab(0);
         }
 
-        private void AddTabContorl(UserControl control, string tabName)
+        //탭 추가 함수
+        private void AddTabControl(UserControl control, string tabName)
         {
+            // 새 탭 추가
             TabPage newTab = new TabPage(tabName)
             {
                 Dock = DockStyle.Fill

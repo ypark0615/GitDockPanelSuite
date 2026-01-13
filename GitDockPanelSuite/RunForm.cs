@@ -13,7 +13,7 @@ using WeifenLuo.WinFormsUI.Docking;
 
 namespace GitDockPanelSuite
 {
-    public partial class RunForm : DockContent
+    public partial class RunForm: DockContent
     {
         public RunForm()
         {
