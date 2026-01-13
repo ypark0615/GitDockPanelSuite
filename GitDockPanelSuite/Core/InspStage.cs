@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Core
@@ -494,6 +494,39 @@ namespace GitDockPanelSuite.Core
             {
                 cameraForm.UpdateImageViewer();
             }
+        }
+        public bool LoadModel(string filePath)
+        {
+            Console.Write($"모델 로딩:{filePath}");
+
+            _model = _model.Load(filePath);
+
+            if (_model is null)
+            {
+                Console.Write($"모델 로딩 실패:{filePath}");
+                return false;
+            }
+
+            string inspImagePath = _model.InspectImagePath;
+            if (File.Exists(inspImagePath))
+            {
+                //Global.Inst.InspStage.SetImageBuffer(inspImagePath);
+            }
+
+            UpdateDiagramEntity();
+
+            return true;
+        }
+
+        public void SaveModel(string filePath)
+        {
+            Console.Write($"모델 저장:{filePath}");
+
+            //입력 경로가 없으면 현재 모델 저장
+            if (string.IsNullOrEmpty(filePath))
+                Global.Inst.InspStage.CurModel.Save();
+            else
+                Global.Inst.InspStage.CurModel.SaveAs(filePath);
         }
 
 

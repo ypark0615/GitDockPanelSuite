@@ -1,4 +1,7 @@
-﻿using System;
+﻿using GitDockPanelSuite.Core;
+using GitDockPanelSuite.Setting;
+using GitDockPanelSuite.Teach;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,8 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitDockPanelSuite.Core;
-using GitDockPanelSuite.Setting;
 using WeifenLuo.WinFormsUI.Docking;
 //using WeifenLuo.WinFormsUI.Docking.VisualStyles; // 이전 방식. 현재에선 사용하지 않음
 
@@ -59,7 +60,7 @@ namespace GitDockPanelSuite
 
             //속성 창 추가
             var propWindow = new PropertiesForm();
-            propWindow.Show(cameraWindow.Pane, DockAlignment.Right, 0.3);
+            propWindow.Show(_dockPanel, DockState.DockRight);
 
             /*//속성창과 같은 탭에 추가하기
             var statisticWindow = new StatisticForm();
@@ -107,5 +108,68 @@ namespace GitDockPanelSuite
             Global.Inst.Dispose();
         }
 
+
+        private string GetModelTitle(Model curModel)
+        {
+            if(curModel == null) return "";
+
+            string modelName = curModel.ModelName;
+            return $"{Define.PROGRAM_NAME} - MODEL : {modelName}";
+        }
+
+        private void modelNewMenuItem_Click(object sender, EventArgs e)
+        {
+            NewModel newModel = new NewModel();
+            newModel.ShowDialog();
+
+            Model curModel = Global.Inst.InspStage.CurModel;
+            if(curModel != null)
+                this.Text = GetModelTitle(curModel);
+        }
+
+        private void modelOpenMenuItem_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "모델 파일 열기";
+                openFileDialog.Filter = "Model Files|*.xml";
+                openFileDialog.Multiselect = false;
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = openFileDialog.FileName;
+                    if (Global.Inst.InspStage.LoadModel(filePath))
+                    {
+                        Model curModel = Global.Inst.InspStage.CurModel;
+                        if (curModel != null)
+                        {
+                            this.Text = GetModelTitle(curModel);
+                        }
+                    }
+                }
+            }
+
+        }
+
+        private void modelSaveMenuItem_Click(object sender, EventArgs e)
+        {
+            Global.Inst.InspStage.SaveModel("");
+        }
+
+        private void modelSaveAsMenuItem_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            {
+                saveFileDialog.InitialDirectory = SettingXml.Inst.ModelDir;
+                saveFileDialog.Title = "모델 파일 선택";
+                saveFileDialog.Filter = "Model Files|*.xml";
+                saveFileDialog.DefaultExt = "xml";
+
+                if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string filePath = saveFileDialog.FileName;
+                    Global.Inst.InspStage.SaveModel(filePath);
+                }
+            }
+        }
     }
 }

@@ -20,6 +20,7 @@ namespace GitDockPanelSuite.Algorithm
 
     public class MatchAlgorithm : InspAlgorithm
     {
+        [XmlIgnore]
         private List<Mat> _templateImages = new List<Mat>();
 
         //찾을 이미지의 매칭율
