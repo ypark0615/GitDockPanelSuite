@@ -189,6 +189,12 @@ namespace GitDockPanelSuite.UIControl
         //#4_IMAGE_VIEWER#5 이미지 로딩 함수
         public void LoadBitmap(Bitmap bitmap)
         {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action<Bitmap>(LoadBitmap), bitmap);
+                return;
+            }
+
             // 기존에 로드된 이미지가 있다면 해제 후 초기화, 메모리누수 방지
             if (_bitmapImage != null)
             {

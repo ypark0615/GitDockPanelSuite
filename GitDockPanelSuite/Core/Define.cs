@@ -39,7 +39,7 @@ namespace GitDockPanelSuite.Core
 
     public enum WorkingState
     {
-        None = 0,
+        NONE = 0,
         INSPECT,
         LIVE,
         ALARM

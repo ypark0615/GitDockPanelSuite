@@ -16,6 +16,7 @@ using System.Runtime.InteropServices;
 using GitDockPanelSuite.Inspect;
 using GitDockPanelSuite.Util;
 using Microsoft.Win32;
+using System.Windows.Forms;
 
 namespace GitDockPanelSuite.Core
 {
@@ -41,6 +42,12 @@ namespace GitDockPanelSuite.Core
 
         private InspWorker _inspWorker = null;
         private ImageLoader _imageLoader = null;
+
+        public bool UseCamera { get; set; } = false;
+
+        private string _lotNumber;
+        private string _serialID;
+
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -314,91 +321,8 @@ namespace GitDockPanelSuite.Core
 
         public void TryInspection(InspWindow inspWindow = null)
         {
-            if (inspWindow is null)
-            {
-                if (_selectedInspWindow is null)
-                    return;
-
-                inspWindow = _selectedInspWindow;
-            }
-
             UpdateDiagramEntity();
-
-            inspWindow.ResetInspResult();
-
-            List<DrawInspectInfo> totalArea = new List<DrawInspectInfo>();
-
-            Rect windowArea = inspWindow.WindowArea;
-
-            foreach (var inspAlgo in inspWindow.AlgorithmList)
-            {
-                if (!inspAlgo.IsUse)
-                    continue;
-
-                //검사 영역 초기화
-                inspAlgo.TeachRect = windowArea;
-                inspAlgo.InspRect = windowArea;
-
-                Mat srcImage = Global.Inst.InspStage.GetMat();
-                inspAlgo.SetInspData(srcImage);
-
-                if(!inspAlgo.DoInspect()) continue;
-
-                List<DrawInspectInfo> resultArea = new List<DrawInspectInfo>();
-                int resultCnt = inspAlgo.GetResultRect(out resultArea);
-                if (resultCnt > 0)
-                {
-                    totalArea.AddRange(resultArea);
-                }
-
-                InspectType inspType = inspAlgo.InspectType;
-
-                string resultInfo = string.Join("\r\n", inspAlgo.ResultString);
-
-                InspResult inspResult = new InspResult
-                {
-                    ObjectID = inspWindow.UID,
-                    InspType = inspAlgo.InspectType,
-                    IsDefect = inspAlgo.IsDefect,
-                    ResultInfos = resultInfo
-                };
-
-                switch (inspType)
-                {
-                    case InspectType.InspMatch:
-                        {
-                            MatchAlgorithm matchAlgo = inspAlgo as MatchAlgorithm;
-                            inspResult.ResultValue = $"{matchAlgo.OutScore}";
-                            break;
-                        }
-                    case InspectType.InspBinary:
-                        {
-                            BlobAlgorithm blobAlgo = (BlobAlgorithm)inspAlgo;
-                            int min = blobAlgo.BlobFilters[blobAlgo.FILTER_COUNT].min;
-                            int max = blobAlgo.BlobFilters[blobAlgo.FILTER_COUNT].max;
-                            inspResult.ResultValue = $"{blobAlgo.OutBlobCount}/{min}~{max}";
-                            break;
-                        }
-                }
-
-                inspWindow.AddInspResult(inspResult);
-            }
-
-            if (totalArea.Count > 0)
-            {
-                //찾은 위치를 이미지상에서 표시
-                var cameraForm = MainForm.GetDockForm<CameraForm>();
-                if (cameraForm != null)
-                {
-                    cameraForm.AddRect(totalArea);
-                }
-            }
-
-            ResultForm resultForm = MainForm.GetDockForm<ResultForm>();
-            if (resultForm != null)
-            {
-                resultForm.AddWindowResult(inspWindow);
-            }
+            InspWorker.TryInspect(inspWindow, InspectType.InspNone);
         }
 
         public void SelectInspWindow(InspWindow inspWindow)
@@ -505,11 +429,13 @@ namespace GitDockPanelSuite.Core
             UpdateDiagramEntity();
         }
 
-        public void Grab(int bufferIndex)
+        public bool Grab(int bufferIndex)
         {
-            if (_grabManager == null) return;
+            if (_grabManager == null) return false;
 
-            _grabManager.Grab(bufferIndex, true);
+            if (!_grabManager.Grab(bufferIndex, true)) return false;
+
+            return true;
         }
 
         //영상 취득 완료 이벤트 발생시 후처리
@@ -600,6 +526,13 @@ namespace GitDockPanelSuite.Core
                 cameraForm.UpdateImageViewer();
             }
         }
+        public void ResetDisplay()
+        {
+            CameraForm cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+                cameraForm.ResetDisplay();
+        }
+
         public bool LoadModel(string filePath)
         {
             SLogger.Write($"모델 로딩:{filePath}");
@@ -632,6 +565,115 @@ namespace GitDockPanelSuite.Core
                 Global.Inst.InspStage.CurModel.Save();
             else
                 Global.Inst.InspStage.CurModel.SaveAs(filePath);
+        }
+
+        public void CycleInspect(bool isCycle)
+        {
+            if (InspWorker.IsRunning)
+                return;
+
+            if (!UseCamera)
+            {
+                string inspImagePath = CurModel.InspectImagePath;
+                if (inspImagePath == "")
+                    return;
+
+                string inspImageDir = Path.GetDirectoryName(inspImagePath);
+                if (!Directory.Exists(inspImageDir))
+                    return;
+
+                if (!_imageLoader.IsLoadedImages())
+                    _imageLoader.LoadImages(inspImageDir);
+            }
+
+            if (isCycle)
+                _inspWorker.StartCycleInspectImage();
+            else
+                OneCycle();
+        }
+
+        public bool OneCycle()
+        {
+            if (UseCamera)
+            {
+                if (!Grab(0))
+                    return false;
+            }
+            else
+            {
+                if (!VirtualGrab())
+                    return false;
+            }
+
+            ResetDisplay();
+
+            bool isDefect;
+            if (!_inspWorker.RunInspect(out isDefect))
+                return false;
+
+            return true;
+        }
+
+        public void StopCycle()
+        {
+            if (_inspWorker != null)
+                _inspWorker.Stop();
+
+            SetWorkingState(WorkingState.NONE);
+        }
+
+        public bool VirtualGrab()
+        {
+            if (_imageLoader is null)
+                return false;
+
+            string imagePath = _imageLoader.GetNextImagePath();
+            if (imagePath == "")
+                return false;
+
+            Global.Inst.InspStage.SetImageBuffer(imagePath);
+
+            _imageSpace.Split(0);
+
+            DisplayGrabImage(0);
+
+            return true;
+        }
+
+        //검사를 위한 준비 작업
+        public bool InspectReady(string lotNumber, string serialID)
+        {
+            _lotNumber = lotNumber;
+            _serialID = serialID;
+
+            LiveMode = false;
+            UseCamera = SettingXml.Inst.CamType != CameraType.None ? true : false;
+
+            Global.Inst.InspStage.CheckImageBuffer();
+
+            ResetDisplay();
+
+            return true;
+        }
+
+        public bool StartAutoRun()
+        {
+            SLogger.Write("Action : StartAutoRun");
+
+            string modelPath = CurModel.ModelPath;
+            if (modelPath == "")
+            {
+                SLogger.Write("열려진 모델이 없습니다!", SLogger.LogType.Error);
+                MessageBox.Show("열려진 모델이 없습니다!");
+                return false;
+            }
+
+            LiveMode = false;
+            UseCamera = SettingXml.Inst.CamType != CameraType.None ? true : false;
+
+            SetWorkingState(WorkingState.INSPECT);
+
+            return true;
         }
 
         public void SetWorkingState(WorkingState workingState)

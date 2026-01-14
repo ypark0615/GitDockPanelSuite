@@ -1,5 +1,6 @@
 ﻿using GitDockPanelSuite.Core;
 using GitDockPanelSuite.Grab;
+using GitDockPanelSuite.Setting;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,7 +28,18 @@ namespace GitDockPanelSuite
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            Global.Inst.InspStage.TryInspection();
+            string serialID = $"{DateTime.Now:MM-dd HH:mm:ss}";
+            Global.Inst.InspStage.InspectReady("LOT_NUMBER", serialID);
+
+            if (SettingXml.Inst.CamType == Grab.CameraType.None)
+            {
+                bool cycleMode = SettingXml.Inst.CycleMode;
+                Global.Inst.InspStage.CycleInspect(cycleMode);
+            }
+            else
+            {
+                Global.Inst.InspStage.StartAutoRun(); // 카메라가 있는 경우 자동 검사 모드 시작
+            }
         }
 
         private void chkLive_CheckedChanged(object sender, EventArgs e)
