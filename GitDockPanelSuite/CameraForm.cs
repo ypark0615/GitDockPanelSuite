@@ -1,4 +1,8 @@
-﻿using GitDockPanelSuite.Core;
+﻿using GitDockPanelSuite.Algorithm;
+using GitDockPanelSuite.Core;
+using GitDockPanelSuite.Teach;
+using GitDockPanelSuite.UIControl;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,10 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
-using OpenCvSharp;
-using GitDockPanelSuite.Algorithm;
-using GitDockPanelSuite.Teach;
-using GitDockPanelSuite.UIControl;
+using GitDockPanelSuite.Util;
 
 namespace GitDockPanelSuite
 {
@@ -29,6 +30,7 @@ namespace GitDockPanelSuite
 
         private void ImageViewer_DiagramEntityEvent(object sender, DiagramEntityEventArgs e)
         {
+            SLogger.Write($"ImageViewer Action {e.ActionType.ToString()}");
             switch (e.ActionType)
             {
                 case EntityActionType.Select:
@@ -165,5 +167,6 @@ namespace GitDockPanelSuite
         {
             imageViewer.SetInspResultCount(new InspectResultCount(totalArea, okCnt, ngCnt));
         }
+
     }
 }

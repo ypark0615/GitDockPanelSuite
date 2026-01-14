@@ -86,6 +86,11 @@ namespace GitDockPanelSuite.Teach
             cloneWindow.WindowArea = this.WindowArea + offset;
             cloneWindow.IsTeach = false;
 
+            cloneWindow.IsPatternLearn = false;
+
+            foreach (var img in _windowImages.ToList())
+                cloneWindow._windowImages.Add(img?.Clone());
+
             foreach (InspAlgorithm algo in AlgorithmList)
             {
                 var cloneAlgo = algo.Clone();
@@ -262,7 +267,7 @@ namespace GitDockPanelSuite.Teach
 
         public void ResetInspResult() // 검사 결과 초기화 함수
         {
-            foreach(var algorithm in AlgorithmList)
+            foreach (var algorithm in AlgorithmList)
             {
                 algorithm.ResetResult();
             }

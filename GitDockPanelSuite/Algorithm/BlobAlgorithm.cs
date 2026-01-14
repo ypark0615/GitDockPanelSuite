@@ -366,7 +366,13 @@ namespace GitDockPanelSuite.Algorithm
             {
                 if (countFilter.min > 0 && findBlobCount < countFilter.min)
                     IsDefect = true;
-                if (!IsDefect && countFilter.max > 0 && findBlobCount > countFilter.max)
+
+                if (IsDefect == false && countFilter.max > 0 && findBlobCount > countFilter.max)
+                    IsDefect = true;
+            }
+            else
+            {
+                if (_findArea.Count > 0)
                     IsDefect = true;
             }
 

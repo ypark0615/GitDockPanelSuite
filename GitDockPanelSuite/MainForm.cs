@@ -1,6 +1,7 @@
 ﻿using GitDockPanelSuite.Core;
 using GitDockPanelSuite.Setting;
 using GitDockPanelSuite.Teach;
+using GitDockPanelSuite.Util;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -67,11 +68,11 @@ namespace GitDockPanelSuite
 
             /*//속성창과 같은 탭에 추가하기
             var statisticWindow = new StatisticForm();
-            statisticWindow.Show(_dockPanel, DockState.DockRight);
+            statisticWindow.Show(_dockPanel, DockState.DockRight);*/
 
             //로그창 50% 비율로 추가
             var logWindow = new LogForm();
-            logWindow.Show(propWindow.Pane, DockAlignment.Bottom, 0.5);*/
+            logWindow.Show(propWindow.Pane, DockAlignment.Bottom, 0.3);
         }
 
         //제네릭 함수 사용를 이용해 입력된 타입의 폼 객체 얻기
@@ -95,13 +96,15 @@ namespace GitDockPanelSuite
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = openFileDialog.FileName;
-                    cameraForm.LoadImage(filePath);
+                    Global.Inst.InspStage.SetImageBuffer(filePath);
+                    Global.Inst.InspStage.CurModel.InspectImagePath = filePath;
                 }
             }
         }
 
         private void SetupMenuItem_Click(object sender, EventArgs e)
         {
+            SLogger.Write($"환경설정창 열기");
             SetupForm setupForm = new SetupForm();
             setupForm.ShowDialog();
         }
@@ -122,6 +125,7 @@ namespace GitDockPanelSuite
 
         private void modelNewMenuItem_Click(object sender, EventArgs e)
         {
+            //신규 모델 추가를 위한 모델 정보를 받기 위한 창 띄우기
             NewModel newModel = new NewModel();
             newModel.ShowDialog();
 
@@ -132,11 +136,13 @@ namespace GitDockPanelSuite
 
         private void modelOpenMenuItem_Click(object sender, EventArgs e)
         {
+            //모델 파일 열기
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Title = "모델 파일 열기";
-                openFileDialog.Filter = "Model Files|*.xml";
+                openFileDialog.Title = "모델 파일 선택";
+                openFileDialog.Filter = "Model Files|*.xml;";
                 openFileDialog.Multiselect = false;
+                openFileDialog.InitialDirectory = SettingXml.Inst.ModelDir;
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = openFileDialog.FileName;
@@ -150,21 +156,22 @@ namespace GitDockPanelSuite
                     }
                 }
             }
-
         }
 
         private void modelSaveMenuItem_Click(object sender, EventArgs e)
         {
+            //모델 파일 저장
             Global.Inst.InspStage.SaveModel("");
         }
 
         private void modelSaveAsMenuItem_Click(object sender, EventArgs e)
         {
+            //다른이름으로 모델 파일 저장
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 saveFileDialog.InitialDirectory = SettingXml.Inst.ModelDir;
                 saveFileDialog.Title = "모델 파일 선택";
-                saveFileDialog.Filter = "Model Files|*.xml";
+                saveFileDialog.Filter = "Model Files|*.xml;";
                 saveFileDialog.DefaultExt = "xml";
 
                 if (saveFileDialog.ShowDialog() == DialogResult.OK)

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing.Imaging;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading.Tasks;
 using OpenCvSharp;
 using GitDockPanelSuite.Util;
 
@@ -31,12 +34,19 @@ namespace GitDockPanelSuite.Core
             private PixelFormat Format { get; set; } // Bitmap PixelFormat 저장
 
             public byte[] ImageData { get; set; } // 실제 픽셀 데이터(byte[])
+
             public int PixelBpp { get; set; }     // 8(Gray) 또는 24(Color)
+
             public int Width { get; set; }        // 이미지 가로
+
             public int Height { get; set; }       // 이미지 세로
+
             public SizeF PixelResolution { get; set; } // 픽셀 해상도(단위는 프로젝트 기준)
+
             public IntPtr Buffer { get; set; }          // ImageData를 Pinned한 포인터
+
             public GCHandle Handle { get; set; }        // Pinned 핸들(카메라 버퍼 연결용)
+
             public int Stride { get; set; }             // 한 줄 바이트 수
 
             public Bitmap ToBitmap() // ImageData 버퍼를 Bitmap으로 래핑해서 반환
@@ -68,8 +78,10 @@ namespace GitDockPanelSuite.Core
                 if (_tempBitmap.PixelFormat == System.Drawing.Imaging.PixelFormat.Format8bppIndexed) // 8bpp 팔레트 세팅
                 {
                     ColorPalette pal = _tempBitmap.Palette;
+                    // Generate grayscale colours:
                     for (Int32 i = 0; i < 256; i++)
                         pal.Entries[i] = Color.FromArgb(i, i, i);
+                    // Assign the edited palette to the bitmap.
                     _tempBitmap.Palette = pal;
                 }
                 return _tempBitmap;
@@ -79,13 +91,16 @@ namespace GitDockPanelSuite.Core
             {
                 MatType matType = PixelBpp == 8 ? MatType.CV_8UC1 : MatType.CV_8UC3;
                 Mat mat = Mat.FromPixelData(Height, Width, matType, ImageData);
+
                 return mat;
             }
 
-            #region Disposable
-            private bool disposed = false; // Dispose 중복 호출 방지용 플래그
 
-            protected virtual void Dispose(bool disposing) // ImageInfo 리소스 해제
+            #region Disposable
+
+            private bool disposed = false; // to detect redundant calls
+
+            protected virtual void Dispose(bool disposing)// ImageInfo 리소스 해제
             {
                 if (!disposed)
                 {
@@ -104,7 +119,8 @@ namespace GitDockPanelSuite.Core
                 Dispose(true);
                 GC.SuppressFinalize(this);
             }
-            #endregion
+
+            #endregion //Disposable
         }
 
         public class ImagePtr // 포인터 기반 이미지 래퍼(Mat 변환용)
@@ -129,6 +145,7 @@ namespace GitDockPanelSuite.Core
             public Mat ToMat() // 포인터를 OpenCV Mat으로 래핑
             {
                 var type = Bpp == 1 ? MatType.CV_8UC1 : MatType.CV_8UC3;
+                //return new Mat(Height, Width, type, Ptr);
                 return Mat.FromPixelData(Height, Width, type, Ptr);
             }
 
@@ -168,6 +185,9 @@ namespace GitDockPanelSuite.Core
 
             Dispose(); // 기존 버퍼/리소스 정리 후 재생성
 
+            _imageByChannel.Clear();
+            _imageInfo.Clear();
+
             Func<int, ImageInfo> newImageInfo = (x) => // ImageInfo 생성 함수(버퍼 생성 + Pinned)
             {
                 var imageInfo = new ImageInfo();
@@ -192,6 +212,8 @@ namespace GitDockPanelSuite.Core
 
             for (int i = 0; i < bufferCount; ++i) // 버퍼 인덱스별 버퍼 생성
             {
+                #region Origin Image buffer Set
+
                 if (_imageInfo.ContainsKey(i) == true) // 이미 존재하면 skip
                     continue;
 
@@ -211,25 +233,35 @@ namespace GitDockPanelSuite.Core
 
                     _imageByChannel.Add(i, imageByChannel); // 채널 버퍼 등록
                 }
+
+                #endregion Origin Image Buffer Set
             }
 
             BufferCount = bufferCount; // 현재 버퍼 수 저장
         }
 
         #region Property
-        public byte[] this[int i] // 인덱스별 원본 ImageData 접근자
-        {
+        public byte[] this[int i]// 인덱스별 원본 ImageData 접근자
+        { 
             get { return _imageInfo[i].ImageData; }
             set { value.CopyTo(_imageInfo[i].ImageData, 0); } // 외부 배열 데이터를 내부 버퍼로 복사
         }
 
+
         public System.Drawing.Size ImageSize { get => new System.Drawing.Size(_inspectionImage.Width, _inspectionImage.Height); } // 이미지 크기
+
         public int PixelBpp { get => _inspectionImage.PixelBpp; } // 픽셀뎁스
+
         public SizeF PixelResolution { get => _inspectionImage.PixelResolution; } // 픽셀 해상도
+
         public int Width { get => _inspectionImage.Width; } // 가로
+
         public int Height { get => _inspectionImage.Height; } // 세로
+
         public int Stride { get => _inspectionImage.Stride; } // stride
+
         public long Length { get => _inspectionImage.Stride * _inspectionImage.Height; } // 전체 바이트 길이
+
         #endregion
 
         public Dictionary<int, Dictionary<eImageChannel, ImagePtr>> GetImageByChannelToClone() // 채널별 이미지 포인터 사전(복사형 IntPtr 생성)
@@ -237,7 +269,7 @@ namespace GitDockPanelSuite.Core
             if (_inspectionImage.PixelBpp == 8) // 그레이면 Gray만 제공
             {
                 return _imageInfo.ToDictionary(kvp => kvp.Key,
-                    kvp => new Dictionary<eImageChannel, ImagePtr> { { eImageChannel.Gray,
+                    kvp => new Dictionary<eImageChannel, ImagePtr>{{ eImageChannel.Gray,
                             new ImagePtr(
                                 new IntPtr(kvp.Value.Buffer.ToInt64()),
                                 kvp.Value.ImageData.Length,
@@ -259,7 +291,7 @@ namespace GitDockPanelSuite.Core
             if (_inspectionImage.PixelBpp == 8) // 그레이면 Gray만 제공
             {
                 return _imageInfo.ToDictionary(kvp => kvp.Key,
-                    kvp => new Dictionary<eImageChannel, ImagePtr> { { eImageChannel.Gray,
+                    kvp => new Dictionary<eImageChannel, ImagePtr>{{ eImageChannel.Gray,
                             new ImagePtr(
                                 kvp.Value.Buffer,
                                 kvp.Value.ImageData.Length,
@@ -340,14 +372,16 @@ namespace GitDockPanelSuite.Core
             {
                 foreach (var light in _imageInfo)
                 {
-                    listBitmap.Add(light.Key, (Bitmap)(light.Value.ToBitmap().Clone()));
+                    listBitmap.Add(light.Key,
+                        (Bitmap)(light.Value.ToBitmap().Clone()));
                 }
             }
             else
             {
                 foreach (var light in _imageByChannel)
                 {
-                    listBitmap.Add(light.Key, (Bitmap)(light.Value[eImageChannel.Color].ToBitmap().Clone()));
+                    listBitmap.Add(light.Key,
+                        (Bitmap)(light.Value[eImageChannel.Color].ToBitmap().Clone()));
                 }
             }
 
@@ -357,7 +391,9 @@ namespace GitDockPanelSuite.Core
         public void Split(int index) // 컬러 이미지(24bpp)를 R/G/B/Gray 채널 버퍼로 분리 저장
         {
             if (!UseImageSplit) return;                 // 분리 기능 OFF면 return
+
             if (_imageInfo.Count <= index) return;      // 인덱스 범위 체크
+
             if (PixelBpp == 8) return;                  // 그레이면 분리 불필요
 
             var original = _imageInfo[index].ToBitmap(); // 원본 Bitmap 생성(버퍼 래핑)
@@ -370,7 +406,9 @@ namespace GitDockPanelSuite.Core
         }
 
         #region Disposable
-        private bool disposed = false; // Dispose 중복 호출 방지용 플래그
+
+
+        private bool disposed = false; // to detect redundant calls
 
         protected virtual void Dispose(bool disposing) // ImageSpace 리소스 해제
         {

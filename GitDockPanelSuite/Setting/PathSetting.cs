@@ -35,6 +35,8 @@ namespace GitDockPanelSuite.Setting
 
             //환경설정 저장
             SettingXml.Save();
+
+            SLogger.Write($"경로 설정 저장");
         }
 
 

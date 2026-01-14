@@ -42,8 +42,7 @@ namespace GitDockPanelSuite.UIControl
         }
     }
 
-
-    public partial class ImageViewCtrl : UserControl
+    public partial class ImageViewCtrl: UserControl
     {
         //ROI를 추가,수정,삭제 등으로 변경 시, 이벤트 발생
         public event EventHandler<DiagramEntityEventArgs> DiagramEntityEvent;
@@ -74,7 +73,6 @@ namespace GitDockPanelSuite.UIControl
         private List<DrawInspectInfo> _rectInfos = new List<DrawInspectInfo>();
 
         private InspectResultCount _inspectResultCount = new InspectResultCount();
-
 
         //#10_INSPWINDOW#15 ROI 편집에 필요한 변수 선언
         private Point _roiStart = Point.Empty;
@@ -107,7 +105,7 @@ namespace GitDockPanelSuite.UIControl
         private Rectangle _screenSelectedRect = Rectangle.Empty;
 
         private Size _extSize = new Size(0, 0);
-
+        
         //팝업 메뉴
         private ContextMenuStrip _contextMenu;
 
@@ -119,7 +117,7 @@ namespace GitDockPanelSuite.UIControl
             _contextMenu = new ContextMenuStrip();
             _contextMenu.Items.Add("Delete", null, OnDeleteClicked);
             _contextMenu.Items.Add(new ToolStripSeparator());
-            _contextMenu.Items.Add("Teaching", null, OnTeachingClicked);
+            _contextMenu.Items.Add("Teaching", null, OnTeachingClicked);            
             _contextMenu.Items.Add("Unlock", null, OnUnlockClicked);
 
 
@@ -364,7 +362,7 @@ namespace GitDockPanelSuite.UIControl
             }
 
             if (_multiSelectedEntities.Count <= 1 && _selEntity != null)
-            {
+            { 
                 //#11_MATCHING#8 패턴매칭할 영역 표시
                 DrawInspParam(g, _selEntity.LinkedWindow);
             }
@@ -819,8 +817,8 @@ namespace GitDockPanelSuite.UIControl
         {
             if (entity is null)
                 return;
-            if (!_multiSelectedEntities.Contains(entity))
-                _multiSelectedEntities.Add(entity);
+                if (!_multiSelectedEntities.Contains(entity))
+                    _multiSelectedEntities.Add(entity);
         }
 
         #region ROI Handle

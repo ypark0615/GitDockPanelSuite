@@ -6,6 +6,18 @@ using System.Threading.Tasks;
 
 namespace GitDockPanelSuite.Core
 {
+    //#10_INSPWINDOW#1 검사 알고리즘 타입 추가
+    public enum InspectType
+    {
+        InspNone = -1,
+        InspBinary,
+        InspMatch,
+        InspFilter,
+        InspAIModule,
+        InspCount
+    }
+
+    //#10_INSPWINDOW#4 InspWindow 정의
     public enum InspWindowType
     {
         None = 0,
@@ -29,8 +41,7 @@ namespace GitDockPanelSuite.Core
 
         //Define.cs 클래스 생성 먼저 할것
         public static readonly string ROI_IMAGE_NAME = "RoiImage.png";
+
         public static readonly string PROGRAM_NAME = "JidamVision";
-
     }
-
 }

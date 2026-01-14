@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,6 +50,8 @@ namespace GitDockPanelSuite.Setting
             SettingXml.Inst.CamType = (CameraType)cbCameraType.SelectedIndex;
             //환경설정 저장
             SettingXml.Save();
+
+            SLogger.Write($"카메라 설정 저장");
         }
 
         private void btnApply_Click(object sender, EventArgs e)

@@ -9,16 +9,8 @@ using System.Xml.Serialization;
 
 namespace GitDockPanelSuite.Algorithm
 {
-    public enum InspectType
-    {
-        InspNone = -1,
-        InspBinary,
-        InspMatch,
-        InspFilter,
-        InspAIModule,
-        InspCount
-    }
-
+    //#12_MODEL SAVE#7 Xml Serialize를 위해서, 아래 코드 추가
+    //XmlSerialize는 추상화된 상태를 알수 없어, 상속된 클래스를 명시적으로 포함해야 함.
     [XmlInclude(typeof(MatchAlgorithm))]
     [XmlInclude(typeof(BlobAlgorithm))]
     public abstract class InspAlgorithm
@@ -46,6 +38,7 @@ namespace GitDockPanelSuite.Algorithm
         //불량 여부
         public bool IsDefect { get; set; }
 
+        //#10_INSPWINDOW#2 InspWindow 복사를 위한 InspAlgorithm 복사 함수
         public abstract InspAlgorithm Clone();
         public abstract bool CopyFrom(InspAlgorithm sourceAlgo);
 
@@ -57,6 +50,7 @@ namespace GitDockPanelSuite.Algorithm
             target.IsInspected = this.IsInspected;
             target.TeachRect = this.TeachRect;
             target.InspRect = this.InspRect;
+            target.ImageChannel = this.ImageChannel;
             // NOTE: _srcImage 는 런타임 검사용이라 복사하지 않음
         }
 

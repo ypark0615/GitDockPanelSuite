@@ -9,12 +9,14 @@ namespace GitDockPanelSuite.Teach
 {
     public class Model
     {
+        //모델 정보 저장을 위해 추가한 프로퍼티
         public string ModelName { get; set; } = "";
         public string ModelInfo { get; set; } = "";
         public string ModelPath { get; set; } = "";
 
         public string InspectImagePath { get; set; } = "";
 
+        [XmlElement("InspWindow")]
         public List<InspWindow> InspWindowList { get; set; }
 
         public Model()
@@ -56,6 +58,7 @@ namespace GitDockPanelSuite.Teach
             return InspWindowList.Count < before;
         }
 
+        //신규 모델 생성
         public void CreateModel(string path, string modelName, string modelInfo)
         {
             ModelPath = path;
@@ -63,12 +66,14 @@ namespace GitDockPanelSuite.Teach
             ModelInfo = modelInfo;
         }
 
+        //#12_MODEL SAVE#2 모델 파일 Load,Save,SaveAs
+        //모델 로딩함수
         public Model Load(string path)
         {
             Model model = XmlHelper.LoadXml<Model>(path);
             if(model == null) return null;
 
-            foreach(var window in model.InspWindowList)
+            foreach (var window in model.InspWindowList)
             {
                 window.LoadInspWindow(model);
             }
@@ -76,22 +81,24 @@ namespace GitDockPanelSuite.Teach
             return model;
         }
 
+        //모델 저장함수
         public void Save()
         {
             if(ModelPath == "") return;
 
             XmlHelper.SaveXml(ModelPath, this);
 
-            foreach(var window in InspWindowList)
+            foreach (var window in InspWindowList)
             {
                 window.SaveInspWindow(this);
             }
         }
 
+        //모델 다른 이름으로 저장함수
         public void SaveAs(string filePath)
         {
             string fileName = Path.GetFileName(filePath);
-            if(Directory.Exists(filePath))
+            if (!Directory.Exists(filePath))
             {
                 ModelPath = Path.Combine(filePath, fileName + ".xml");
                 ModelName = fileName;

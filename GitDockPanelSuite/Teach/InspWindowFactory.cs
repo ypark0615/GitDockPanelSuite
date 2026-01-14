@@ -25,6 +25,7 @@ namespace GitDockPanelSuite.Teach
 
         public InspWindowFactory() { }
 
+        //InspWindow를 생성하기 위해, 타입을 입력받아, 생성된 InspWindow 반환
         public InspWindow Create(InspWindowType windowType, bool addAlgorithm = true)
         {
             string name, prefix;
@@ -36,7 +37,7 @@ namespace GitDockPanelSuite.Teach
             if (!_windowTypeNo.ContainsKey(name))
                 _windowTypeNo[name] = 0;
 
-            int curID = ++_windowTypeNo[name];
+            int curID = _windowTypeNo[name];
             curID++;
 
             inspWindow.UID = string.Format("{0}_{1:D6}", prefix, curID);
@@ -54,19 +55,23 @@ namespace GitDockPanelSuite.Teach
             switch (inspWindow.InspWindowType)
             {
                 case InspWindowType.Base:
+                    inspWindow.AddInspAlgorithm(InspectType.InspMatch);
                     inspWindow.AddInspAlgorithm(InspectType.InspBinary);
                     break;
                 case InspWindowType.Body:
+                    inspWindow.AddInspAlgorithm(InspectType.InspMatch);
                     inspWindow.AddInspAlgorithm(InspectType.InspBinary);
                     break;
                 case InspWindowType.Sub:
+                    inspWindow.AddInspAlgorithm(InspectType.InspMatch);
                     inspWindow.AddInspAlgorithm(InspectType.InspBinary);
                     break;
             }
 
-            return false;
+            return true;
         }
 
+        //타입을 입력하면, 해당 타입의 이름과 UID 이름 반환
         private bool GetWindowName(InspWindowType windowType, out string name, out string prefix)
         {
             name = string.Empty;
@@ -90,5 +95,6 @@ namespace GitDockPanelSuite.Teach
             }
             return true;
         }
+
     }
 }

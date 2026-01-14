@@ -36,6 +36,8 @@ namespace GitDockPanelSuite
 
             if (Global.Inst.InspStage.LiveMode)
             {
+                //#13_SET_IMAGE_BUFFER#4 그랩시 이미지 버퍼를 먼저 설정하도록 변경
+                Global.Inst.InspStage.CheckImageBuffer();
                 Global.Inst.InspStage.Grab(0);
             }
         }

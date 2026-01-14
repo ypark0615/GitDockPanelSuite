@@ -9,17 +9,21 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
-using System.IO;
+using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Runtime.InteropServices;
 using GitDockPanelSuite.Inspect;
+using GitDockPanelSuite.Util;
 
 namespace GitDockPanelSuite.Core
 {
     public class InspStage : IDisposable // 검사 스테이지(Inspection Stage)
     {
-        public static readonly int MAX_GRAB_BUF = 5; // 전역적으로 공유되는 최대 Grab 버퍼 수
+        public static readonly int MAX_GRAB_BUF = 1; // 전역적으로 공유되는 최대 Grab 버퍼 수
 
         private ImageSpace _imageSpace = null; // Grab된 원본 이미지 및 분할 이미지 관리
+
         //private HikRobotCam _grabManager = null; // HikRobot 카메라 제어 클래스
         private GrabModel _grabManager = null;
         private CameraType _camType = CameraType.WebCam;
@@ -46,7 +50,7 @@ namespace GitDockPanelSuite.Core
                 if (_saigeAI is null)
                     _saigeAI = new SaigeAI();
                 return _saigeAI;
-            }                
+            }
         }
 
         public PreviewImage PreView
@@ -67,14 +71,13 @@ namespace GitDockPanelSuite.Core
 
         public bool Initialize()
         {
+            SLogger.Write("InspStage 초기화!");
             _imageSpace = new ImageSpace(); // ImageSpace 생성
 
             //_blobAlgorithm = new BlobAlgorithm(); // BlobAlgorithm 생성
             _previewImage = new PreviewImage(); // PreviewImage 생성
 
             _model = new Model(); // Model 생성
-
-            LoadSetting();
 
             switch (_camType)
             {
@@ -128,6 +131,72 @@ namespace GitDockPanelSuite.Core
             SetBuffer(bufferCount); // 버퍼 개수 설정
 
             //_grabManager.SetExposureTime(25000);
+        }
+        public void SetImageBuffer(string filePath)
+        {
+            SLogger.Write($"Load Image : {filePath}");
+
+            Mat matImage = Cv2.ImRead(filePath);
+
+            int pixelBpp = 8;
+            int imageWidth;
+            int imageHeight;
+            int imageStride;
+
+            if (matImage.Type() == MatType.CV_8UC3)
+                pixelBpp = 24;
+
+            imageWidth = (matImage.Width + 3) / 4 * 4;
+            imageHeight = matImage.Height;
+
+            // 4바이트 정렬된 새로운 Mat 생성
+            Mat alignedMat = new Mat();
+            Cv2.CopyMakeBorder(matImage, alignedMat, 0, 0, 0, imageWidth - matImage.Width, BorderTypes.Constant, Scalar.Black);
+
+            imageStride = imageWidth * matImage.ElemSize();
+
+            if (_imageSpace != null)
+            {
+                _imageSpace.SetImageInfo(pixelBpp, imageWidth, imageHeight, imageStride);
+            }
+
+            SetBuffer(1);
+
+            int bufferIndex = 0;
+
+            // Mat의 데이터를 byte 배열로 복사
+            int bufSize = (int)(alignedMat.Total() * alignedMat.ElemSize());
+            Marshal.Copy(alignedMat.Data, ImageSpace.GetInspectionBuffer(bufferIndex), 0, bufSize);
+
+            _imageSpace.Split(bufferIndex);
+
+            DisplayGrabImage(bufferIndex);
+
+            if (_previewImage != null)
+            {
+                Bitmap bitmap = ImageSpace.GetBitmap(0);
+                _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
+            }
+        }
+
+        public void CheckImageBuffer()
+        {
+            if (_grabManager != null && SettingXml.Inst.CamType != CameraType.None)
+            {
+                int imageWidth;
+                int imageHeight;
+                int imageStride;
+                _grabManager.GetResolution(out imageWidth, out imageHeight, out imageStride);
+
+                if (_imageSpace.ImageSize.Width != imageWidth || _imageSpace.ImageSize.Height != imageHeight)
+                {
+                    int pixelBpp = 8;
+                    _grabManager.GetPixelBpp(out pixelBpp);
+
+                    _imageSpace.SetImageInfo(pixelBpp, imageWidth, imageHeight, imageStride);
+                    SetBuffer(_imageSpace.BufferCount);
+                }
+            }
         }
 
 
@@ -185,7 +254,7 @@ namespace GitDockPanelSuite.Core
             if (inspWindow.WindowArea.Right >= curImage.Width ||
                 inspWindow.WindowArea.Bottom >= curImage.Height)
             {
-                Console.Write("ROI 영역이 잘못되었습니다!");
+                SLogger.Write("ROI 영역이 잘못되었습니다!");
                 return;
             }
 
@@ -207,22 +276,23 @@ namespace GitDockPanelSuite.Core
 
         public void SetBuffer(int bufferCount)
         {
-            if (_grabManager == null) return; // GrabManager null 체크
+            _imageSpace.InitImageSpace(bufferCount);
 
-            if (_imageSpace.BufferCount == bufferCount) return; // 현재 연결된 버퍼 수와 입력받은 버퍼 수가 동일하면 return
-
-            _imageSpace.InitImageSpace(bufferCount); // ImageSpace 버퍼 초기화
-            _grabManager.InitBuffer(bufferCount); // GrabManager 버퍼 초기화
-
-            for (int i = 0; i < bufferCount; i++) // 각 버퍼를 카메라에 바인딩
+            if (_grabManager != null)
             {
-                _grabManager.SetBuffer(
-                    _imageSpace.GetInspectionBuffer(i),
-                    _imageSpace.GetnspectionBufferPtr(i),
-                    _imageSpace.GetInspectionBufferHandle(i),
-                    i
-                );
+                _grabManager.InitBuffer(bufferCount);
+
+                for (int i = 0; i < bufferCount; i++)
+                {
+                    _grabManager.SetBuffer(
+                        _imageSpace.GetInspectionBuffer(i),
+                        _imageSpace.GetnspectionBufferPtr(i),
+                        _imageSpace.GetInspectionBufferHandle(i),
+                        i);
+                }
             }
+
+            SLogger.Write("버퍼 초기화 성공!");
         }
 
 
@@ -230,7 +300,7 @@ namespace GitDockPanelSuite.Core
         {
             if (inspWindow is null)
             {
-                if(_selectedInspWindow is null)
+                if (_selectedInspWindow is null)
                     return;
 
                 inspWindow = _selectedInspWindow;
@@ -401,7 +471,7 @@ namespace GitDockPanelSuite.Core
 
             inspWindow.WindowArea = rect;
             inspWindow.IsTeach = false;
-            
+
             UpdateProperty(inspWindow);
         }
 
@@ -430,7 +500,7 @@ namespace GitDockPanelSuite.Core
         private async void _multiGrab_TransferCompleted(object sender, object e)
         {
             int bufferIndex = (int)e;
-            Console.WriteLine($"_multiGrab_TransferCompleted {bufferIndex}");
+            SLogger.Write($"TransferCompleted {bufferIndex}");
 
             _imageSpace.Split(bufferIndex); // Grab된 이미지 분할 처리
             DisplayGrabImage(bufferIndex);  // 화면 갱신
@@ -445,6 +515,7 @@ namespace GitDockPanelSuite.Core
             //이 함수는 await를 사용하여 비동기적으로 실행되어, 함수를 async로 선언해야 합니다.
             if (LiveMode)
             {
+                SLogger.Write("Grab");
                 await Task.Delay(100);  // 비동기 대기
                 _grabManager.Grab(bufferIndex, true);  // 다음 촬영 시작
             }
@@ -515,20 +586,20 @@ namespace GitDockPanelSuite.Core
         }
         public bool LoadModel(string filePath)
         {
-            Console.Write($"모델 로딩:{filePath}");
-
+            SLogger.Write($"모델 로딩:{filePath}");
+                
             _model = _model.Load(filePath);
 
             if (_model is null)
             {
-                Console.Write($"모델 로딩 실패:{filePath}");
+                SLogger.Write($"모델 로딩 실패:{filePath}", SLogger.LogType.Error);
                 return false;
             }
 
             string inspImagePath = _model.InspectImagePath;
             if (File.Exists(inspImagePath))
             {
-                //Global.Inst.InspStage.SetImageBuffer(inspImagePath);
+                Global.Inst.InspStage.SetImageBuffer(inspImagePath);
             }
 
             UpdateDiagramEntity();
@@ -538,7 +609,7 @@ namespace GitDockPanelSuite.Core
 
         public void SaveModel(string filePath)
         {
-            Console.Write($"모델 저장:{filePath}");
+            SLogger.Write($"모델 저장:{filePath}");
 
             //입력 경로가 없으면 현재 모델 저장
             if (string.IsNullOrEmpty(filePath))

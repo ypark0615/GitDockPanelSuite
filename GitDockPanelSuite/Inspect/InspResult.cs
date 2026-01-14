@@ -36,7 +36,7 @@ namespace GitDockPanelSuite.Inspect
             ObjectType = InspWindowType.None;
             ErrorCode = 0;
             IsDefect = false;
-            ResultValue = string.Empty;
+            ResultValue = "";
             ResultInfos = string.Empty;
         }
 
@@ -48,7 +48,7 @@ namespace GitDockPanelSuite.Inspect
             ObjectType = objectType;
             ErrorCode = 0;
             IsDefect = false;
-            ResultValue = string.Empty;
+            ResultValue = "";
             ResultInfos = string.Empty;
         }
     }

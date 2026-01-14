@@ -1,4 +1,5 @@
-﻿using MvCamCtrl.NET;
+﻿using GitDockPanelSuite.Util;
+using MvCamCtrl.NET;
 using MvCameraControl;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace GitDockPanelSuite.Grab
         // 이미지 취득 콜백함수
         void FrameGrabedEventHandler(object sender, FrameGrabbedEventArgs e)
         {
-            Console.WriteLine("Get one frame: Width[{0}] , Height[{1}] , ImageSize[{2}], FrameNum[{3}]", e.FrameOut.Image.Width, e.FrameOut.Image.Height, e.FrameOut.Image.ImageSize, e.FrameOut.FrameNum);
+            //SLogger.Write("Get one frame: Width[{0}] , Height[{1}] , ImageSize[{2}], FrameNum[{3}]", e.FrameOut.Image.Width, e.FrameOut.Image.Height, e.FrameOut.Image.ImageSize, e.FrameOut.FrameNum);
 
             IFrameOut frameOut = e.FrameOut;
 
@@ -46,7 +47,7 @@ namespace GitDockPanelSuite.Grab
                     int result = _device.PixelTypeConverter.ConvertPixelType(inputImage, out outImage, dstPixelType);
                     if (result != MvError.MV_OK)
                     {
-                        Console.WriteLine("Image Convert failed:{0:x8}", result);
+                        SLogger.Write($"Image Convert failed:{result:x8}", SLogger.LogType.Error);
                         return;
                     }
 
@@ -90,11 +91,11 @@ namespace GitDockPanelSuite.Grab
                 int ret = DeviceEnumerator.EnumDevices(devLayerType, out devInfoList);
                 if (ret != MvError.MV_OK)
                 {
-                    Console.WriteLine("Enum device failed:{0:x8}", ret);
+                    SLogger.Write($"Enum device failed:{ret:x8}", SLogger.LogType.Error);
                     return false;
                 }
 
-                Console.WriteLine("Enum device count : {0}", devInfoList.Count);
+                SLogger.Write($"Enum device count : {devInfoList.Count}");
 
                 if (0 == devInfoList.Count)
                 {
@@ -107,7 +108,6 @@ namespace GitDockPanelSuite.Grab
                 int devIndex = 0;
                 foreach (var devInfo in devInfoList)
                 {
-                    Console.WriteLine("[Device {0}]:", devIndex);
                     if (devInfo.TLayerType == DeviceTLayerType.MvGigEDevice || devInfo.TLayerType == DeviceTLayerType.MvVirGigEDevice || devInfo.TLayerType == DeviceTLayerType.MvGenTLGigEDevice)
                     {
                         IGigEDeviceInfo gigeDevInfo = devInfo as IGigEDeviceInfo;
@@ -117,7 +117,7 @@ namespace GitDockPanelSuite.Grab
                         uint nIp4 = (gigeDevInfo.CurrentIp & 0x000000ff);
 
                         string strIP = nIp1 + "." + nIp2 + "." + nIp3 + "." + nIp4;
-                        Console.WriteLine("DevIP" + strIP);
+                        SLogger.Write($"Device {devIndex}, DevIP : " + strIP);
 
                         if (_strIpAddr is null || strIP == strIpAddr)
                         {
@@ -126,15 +126,14 @@ namespace GitDockPanelSuite.Grab
                         }
                     }
 
-                    Console.WriteLine("ModelName:" + devInfo.ModelName);
-                    Console.WriteLine("SerialNumber:" + devInfo.SerialNumber);
-                    Console.WriteLine();
+                    SLogger.Write("ModelName:" + devInfo.ModelName);
+                    SLogger.Write("SerialNumber:" + devInfo.SerialNumber);
                     devIndex++;
                 }
 
                 if (selDevIndex < 0 || selDevIndex > devInfoList.Count - 1)
                 {
-                    Console.WriteLine("Invalid selected device number:{0}", selDevIndex);
+                    SLogger.Write($"Invalid selected device number:{selDevIndex}", SLogger.LogType.Error);
                     return false;
                 }
 
@@ -202,7 +201,8 @@ namespace GitDockPanelSuite.Grab
                     if (MvError.MV_OK != ret)
                     {
                         _device.Dispose();
-                        Console.WriteLine("Device open fail!", ret);
+                        SLogger.Write($"Device open fail! [{ret:x8}]", SLogger.LogType.Error);
+                        MessageBox.Show($"Device open fail! {ret:X8}");
                         return false;
                     }
 
@@ -215,16 +215,16 @@ namespace GitDockPanelSuite.Grab
                             ret = _device.Parameters.SetIntValue("GevSCPSPacketSize", packetSize);
                             if (ret != MvError.MV_OK)
                             {
-                                Console.WriteLine("Warning: Set Packet Size failed {0:x8}", ret);
+                                SLogger.Write($"Warning: Set Packet Size failed {ret:x8}", SLogger.LogType.Error);
                             }
                             else
                             {
-                                Console.WriteLine("Set PacketSize to {0}", packetSize);
+                                SLogger.Write($"Set PacketSize to {packetSize}");
                             }
                         }
                         else
                         {
-                            Console.WriteLine("Warning: Get Packet Size failed {0:x8}", ret);
+                            SLogger.Write($"Warning: Get Packet Size failed {ret:x8}",SLogger.LogType.Error);
                         }
                     }
 
@@ -232,7 +232,7 @@ namespace GitDockPanelSuite.Grab
                     ret = _device.Parameters.SetEnumValue("TriggerMode", 1);
                     if (ret != MvError.MV_OK)
                     {
-                        Console.WriteLine("Set TriggerMode failed:{0:x8}", ret);
+                        SLogger.Write($"Set TriggerMode failed:{ret:x8}", SLogger.LogType.Error);
                         return false;
                     }
 
@@ -248,14 +248,14 @@ namespace GitDockPanelSuite.Grab
                     ret = _device.StreamGrabber.StartGrabbing();
                     if (ret != MvError.MV_OK)
                     {
-                        Console.WriteLine("Start grabbing failed:{0:x8}", ret);
+                        SLogger.Write("$Start grabbing failed:{ret:x8}", SLogger.LogType.Error);
                         return false;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                SLogger.Write(ex.ToString(), SLogger.LogType.Error);
                 return false;
             }
 
@@ -266,7 +266,7 @@ namespace GitDockPanelSuite.Grab
         {
             if(_device == null)
             {
-                Console.WriteLine("_camera is null");
+                SLogger.Write("_device is null", SLogger.LogType.Error);
                 return false;
             }
             Close();
@@ -282,7 +282,7 @@ namespace GitDockPanelSuite.Grab
             int result = _device.Parameters.GetEnumValue("PixelFormat", out enumValue);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Get PixelFormat failed: nRet {0:x8}", result);
+                SLogger.Write($"Get PixelFormat failed:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
 
@@ -305,7 +305,7 @@ namespace GitDockPanelSuite.Grab
             int result = _device.Parameters.SetFloatValue("ExposureTime", exposure);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Set Exposure Time Fail!", result);
+                SLogger.Write($"Set Exposure Time Fail:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
 
@@ -335,7 +335,7 @@ namespace GitDockPanelSuite.Grab
             int result = _device.Parameters.SetFloatValue("Gain", gain);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Set Gain Time Fail!", result);
+                SLogger.Write($"Set Gain Fail:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
 
@@ -374,7 +374,7 @@ namespace GitDockPanelSuite.Grab
             result = _device.Parameters.GetIntValue("Width", out intValue);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Get Width failed: nRet {0:x8}", result);
+                SLogger.Write($"Get Width Fail:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
             width = (int)intValue.CurValue;
@@ -382,7 +382,7 @@ namespace GitDockPanelSuite.Grab
             result = _device.Parameters.GetIntValue("Height", out intValue);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Get Height failed: nRet {0:x8}", result);
+                SLogger.Write($"Get Height Fail:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
             height = (int)intValue.CurValue;
@@ -390,7 +390,7 @@ namespace GitDockPanelSuite.Grab
             result = _device.Parameters.GetEnumValue("PixelFormat", out enumValue);
             if (result != MvError.MV_OK)
             {
-                Console.WriteLine("Get PixelFormat failed: nRet {0:x8}", result);
+                SLogger.Write($"Get PixelFormat Fail:{result:x8}", SLogger.LogType.Error);
                 return false;
             }
             pixelType = (MvGvspPixelType)enumValue.CurEnumEntry.Value;
