@@ -36,6 +36,8 @@ namespace GitDockPanelSuite
             LoadDockingWindows();
 
             Global.Inst.Initialize();
+
+            LoadSetting();
         }
 
         private void LoadDockingWindows()
@@ -74,6 +76,12 @@ namespace GitDockPanelSuite
             var logWindow = new LogForm();
             logWindow.Show(propWindow.Pane, DockAlignment.Bottom, 0.3);
         }
+
+        private void LoadSetting()
+        {
+            cycleModeToolStripMenuItem.Checked = SettingXml.Inst.CycleMode;
+        }
+
 
         //제네릭 함수 사용를 이용해 입력된 타입의 폼 객체 얻기
         public static T GetDockForm<T>() where T : DockContent
@@ -180,6 +188,12 @@ namespace GitDockPanelSuite
                     Global.Inst.InspStage.SaveModel(filePath);
                 }
             }
+        }
+
+        private void cycleModeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool isChecked = cycleModeToolStripMenuItem.Checked;
+            SettingXml.Inst.CycleMode = isChecked;
         }
     }
 }

@@ -149,6 +149,9 @@ namespace GitDockPanelSuite.UIControl
                 case InspWindowType.Body:
                     color = Color.ForestGreen;
                     break;
+                case InspWindowType.ID:
+                    color = Color.PaleGoldenrod;
+                    break;
             }
 
             return color;

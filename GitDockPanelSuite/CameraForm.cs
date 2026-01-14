@@ -168,5 +168,9 @@ namespace GitDockPanelSuite
             imageViewer.SetInspResultCount(new InspectResultCount(totalArea, okCnt, ngCnt));
         }
 
+        public void SetWorkingState(WorkingState state)
+        {
+            imageViewer.Invalidate();
+        }
     }
 }

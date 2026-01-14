@@ -87,5 +87,6 @@ namespace GitDockPanelSuite.Setting
 
         public CameraType CamType { get; set; } = CameraType.WebCam;
 
+        public bool CycleMode { get; set; } = false; // 연속 검사 모드
     }
 }

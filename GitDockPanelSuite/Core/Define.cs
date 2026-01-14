@@ -23,7 +23,8 @@ namespace GitDockPanelSuite.Core
         None = 0,
         Base,
         Body,
-        Sub
+        Sub,
+        ID
     }
 
     public enum DecisionType
@@ -36,10 +37,16 @@ namespace GitDockPanelSuite.Core
         Timeout         //타임아웃
     }
 
+    public enum WorkingState
+    {
+        None = 0,
+        INSPECT,
+        LIVE,
+        ALARM
+    }
+
     public static class Define
     {
-
-        //Define.cs 클래스 생성 먼저 할것
         public static readonly string ROI_IMAGE_NAME = "RoiImage.png";
 
         public static readonly string PROGRAM_NAME = "JidamVision";

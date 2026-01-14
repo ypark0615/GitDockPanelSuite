@@ -121,7 +121,9 @@
     <Compile Include="Core\ImageSpace.cs" />
     <Compile Include="Core\InspStage.cs" />
     <Compile Include="Core\PreviewImage.cs" />
+    <Compile Include="Inspect\InspectBoard.cs" />
     <Compile Include="Inspect\InspResult.cs" />
+    <Compile Include="Inspect\InspWorker.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -242,6 +244,8 @@
       <DependentUpon>RangeTrackbar.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\BitmapExtension.cs" />
+    <Compile Include="Util\ImageFileSorter.cs" />
+    <Compile Include="Util\ImageLoader.cs" />
     <Compile Include="Util\SLogger.cs" />
     <Compile Include="Util\XmlHelper.cs" />
     <EmbeddedResource Include="CameraForm.resx">

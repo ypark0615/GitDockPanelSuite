@@ -15,6 +15,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using GitDockPanelSuite.Inspect;
 using GitDockPanelSuite.Util;
+using Microsoft.Win32;
 
 namespace GitDockPanelSuite.Core
 {
@@ -37,6 +38,10 @@ namespace GitDockPanelSuite.Core
 
         private InspWindow _selectedInspWindow = null;
 
+
+        private InspWorker _inspWorker = null;
+        private ImageLoader _imageLoader = null;
+
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
         {
@@ -58,6 +63,12 @@ namespace GitDockPanelSuite.Core
             get => _previewImage;
         }
 
+        public InspWorker InspWorker
+        {
+            get => _inspWorker;
+        }
+
+
         public Model CurModel
         {
             get => _model;
@@ -76,6 +87,11 @@ namespace GitDockPanelSuite.Core
 
             //_blobAlgorithm = new BlobAlgorithm(); // BlobAlgorithm 생성
             _previewImage = new PreviewImage(); // PreviewImage 생성
+
+            _inspWorker = new InspWorker();
+            _imageLoader = new ImageLoader();
+
+            //_regKey = Registry.CurrentUser.CreateSubKey("Software\\GitDockPanelSuite");
 
             _model = new Model(); // Model 생성
 
@@ -618,6 +634,12 @@ namespace GitDockPanelSuite.Core
                 Global.Inst.InspStage.CurModel.SaveAs(filePath);
         }
 
+        public void SetWorkingState(WorkingState workingState)
+        {
+            var cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+                cameraForm.SetWorkingState(workingState);
+        }
 
         #region Disposable
         private bool disposed = false; // Dispose 호출 여부
