@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitDockPanelSuite.Grab;
+using GitDockPanelSuite.Util;
 
 namespace GitDockPanelSuite.Setting
 {
