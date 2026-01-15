@@ -25,6 +25,9 @@ namespace GitDockPanelSuite.Property
     {
         //속성창의 값이 변경시 발생하는 이벤트
         //public event EventHandler<EventArgs> PropertyChanged;
+
+        //이미지 채널 변경시 발생하는 이벤트
+        public event EventHandler<ImageChannelEventArgs> ImageChannelChanged;
         //양방향 슬라이더 값 변경시 발생하는 이벤트
         public event EventHandler<RangeChangedEventArgs> RangeChanged;
 
@@ -54,6 +57,13 @@ namespace GitDockPanelSuite.Property
 
             binRangeTrackbar.ValueLeft = 0;
             binRangeTrackbar.ValueRight = 128;
+
+            //이미지 채널 설정 콤보박스
+            cbChannel.Items.Add("Gray");
+            cbChannel.Items.Add("Red");
+            cbChannel.Items.Add("Green");
+            cbChannel.Items.Add("Blue");
+            cbChannel.SelectedIndex = 0; // 기본값으로 "사용안함" 선택
 
             //이진화 프리뷰 콤보박스 초기화 설정
             cbHighlight.Items.Add("사용안함");
@@ -140,6 +150,8 @@ namespace GitDockPanelSuite.Property
                 binRangeTrackbar.SetThreshold(threshold.lower, threshold.upper);
 
             cbBinMethod.SelectedIndex = (int)_blobAlgo.BinMethod;
+
+            cbChannel.SelectedIndex  = (int)_blobAlgo.ImageChannel - 1;
 
             UpdateDataGridView(true);
             chkRotatedRect.Checked = _blobAlgo.UseRotatedRect;
@@ -259,6 +271,13 @@ namespace GitDockPanelSuite.Property
         //콤보박스 변경시 이진화 프리뷰 갱신
         private void cbHighlight_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //#18_IMAGE_CHANNEL#12 하이라이트 선택시, 이미지 채널 정보를 전달하여,
+            //프리뷰에 나타나도록 이벤트 발생
+            if (_blobAlgo is null)
+                return;
+
+            _blobAlgo.ImageChannel = (eImageChannel)cbChannel.SelectedIndex + 1;
+            ImageChannelChanged?.Invoke(this, new ImageChannelEventArgs(_blobAlgo.ImageChannel));
             UpdateBinary();
         }
 
@@ -291,7 +310,7 @@ namespace GitDockPanelSuite.Property
             if (_blobAlgo is null) return;
 
             _blobAlgo.BinMethod = (BinaryMethod)cbBinMethod.SelectedIndex;
-            chkRotatedRect.Enabled = _blobAlgo.BinMethod == BinaryMethod.Feature; // 왜 ?가 있는가?
+            chkRotatedRect.Enabled = (_blobAlgo.BinMethod == BinaryMethod.Feature); // true/false
 
             if (_blobAlgo.BinMethod == BinaryMethod.PixelCount)
             {
@@ -310,6 +329,27 @@ namespace GitDockPanelSuite.Property
             _updateDataGridView = true;
         }
 
+        private void cbChannel_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if(_blobAlgo is null)
+                return;
+
+            _blobAlgo.ImageChannel = (eImageChannel)cbChannel.SelectedIndex + 1;
+            ImageChannelChanged?.Invoke(this, new ImageChannelEventArgs(_blobAlgo.ImageChannel));
+        }
+    }
+
+    public class ImageChannelEventArgs : EventArgs
+    {
+        public eImageChannel Channel{ get; }
+        public int UpperValue { get; }
+        public bool Invert { get; }
+        public ShowBinaryMode ShowBinMode { get; }
+
+        public ImageChannelEventArgs(eImageChannel channel)
+        {
+            Channel = channel;
+        }
     }
 
     //이진화 관련 이벤트 발생시, 전달할 값 추가

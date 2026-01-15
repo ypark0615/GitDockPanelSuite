@@ -44,10 +44,11 @@ namespace GitDockPanelSuite.Util
                     break;
             }
 
-            // UI 표시 메시지
-            logMessage = $"{DateTime.Now:MM-dd HH:mm:ss} {logMessage}"; // 타임스탬프 추가
+            // UI에 시간이 표시되도록함
+            logMessage = $"[{DateTime.Now:MM-dd HH:mm:ss}] {logMessage}";
 
-            LogUpdated?.Invoke(logMessage); // 로그가 추가되었을 때 이벤트 발생
+            // 로그가 추가되었음을 알림
+            LogUpdated?.Invoke(logMessage);
         }
     }
 }

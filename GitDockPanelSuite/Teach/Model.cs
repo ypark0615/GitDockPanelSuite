@@ -1,9 +1,13 @@
-﻿using System;
+﻿using Common.Util.Helpers;
+using GitDockPanelSuite.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using GitDockPanelSuite.Core;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml.Serialization;
-using Common.Util.Helpers;
 
 namespace GitDockPanelSuite.Teach
 {

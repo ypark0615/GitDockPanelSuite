@@ -22,6 +22,7 @@ namespace GitDockPanelSuite.Setting
         {
             InitializeComponent();
 
+            //#SETUP#5 탭 콘트롤 추가, 아래 함수 함께 구현할것
             InitTabControl();
         }
 

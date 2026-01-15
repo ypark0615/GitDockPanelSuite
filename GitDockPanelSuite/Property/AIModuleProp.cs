@@ -91,7 +91,7 @@ namespace GitDockPanelSuite.Property
             }
 
             _saigeAI.InspAIModule(bitmap); // 검사 모듈에 이미지 입력
-            
+
             Bitmap resultImage = _saigeAI.GetResultImage(); // 결과 이미지 호출
 
             Global.Inst.InspStage.UpdateDisplay(resultImage); // 결과 이미지 표출

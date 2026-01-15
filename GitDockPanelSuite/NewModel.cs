@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GitDockPanelSuite.Core;
+using GitDockPanelSuite.Setting;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,8 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitDockPanelSuite.Core;
-using GitDockPanelSuite.Setting;
 
 namespace GitDockPanelSuite
 {

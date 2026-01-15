@@ -1,17 +1,17 @@
 ﻿using GitDockPanelSuite.Util;
-using MvCamCtrl.NET;
 using MvCameraControl;
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Threading.Tasks;
+
 
 namespace GitDockPanelSuite.Grab
 {
 
+    //#5_CAMERA_INTERFACE#1 GrabModel로 상속 변경
+    //internal class HikRobotCam : IDisposable
     internal class HikRobotCam : GrabModel
     {
 

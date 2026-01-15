@@ -13,14 +13,15 @@ using System.Xml.Serialization;
 namespace Common.Util.Helpers
 {
     /*
-	XmlHelper 클래스에서 XML을 저장하는 방법은 **객체 직렬화(Serialization)**를 이용하여 객체를 XML로 변환한 후 파일로 저장하는 방식입니다.
-	이를 담당하는 핵심 메서드는 SaveXml<T>(string fileName, T obj) 입니다.
+	 * XmlHelper 클래스에서 XML을 저장하는 방법은 **객체 직렬화(Serialization)**를 이용하여 객체를 XML로 변환한 후 파일로 저장하는 방식입니다.
+이를 담당하는 핵심 메서드는 SaveXml<T>(string fileName, T obj) 입니다.
 
 	XmlSerializer는 .NET의 XML 직렬화/역직렬화를 담당하는 클래스입니다.
 
 	직렬화 (Serialization): 객체를 XML 형식으로 변환
 	역직렬화 (Deserialization): XML을 객체로 변환
-	*/
+
+	 */
 
     public class XmlHelper
 	{

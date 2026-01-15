@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GitDockPanelSuite.Util;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -6,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using GitDockPanelSuite.Util;
 
 namespace GitDockPanelSuite.Grab
 {
@@ -31,18 +31,36 @@ namespace GitDockPanelSuite.Grab
 
         public byte[] ImageBuffer
         {
-            get { return _imageBuffer; }
-            set { _imageBuffer = value; }
+            get
+            {
+                return _imageBuffer;
+            }
+            set
+            {
+                _imageBuffer = value;
+            }
         }
         public IntPtr ImageBufferPtr
         {
-            get { return _imageBufferPtr; }
-            set { _imageBufferPtr = value; }
+            get
+            {
+                return _imageBufferPtr;
+            }
+            set
+            {
+                _imageBufferPtr = value;
+            }
         }
         public GCHandle ImageHandle
         {
-            get { return _imageHandle; }
-            set { _imageHandle = value; }
+            get
+            {
+                return _imageHandle;
+            }
+            set
+            {
+                _imageHandle = value;
+            }
         }
     }
 

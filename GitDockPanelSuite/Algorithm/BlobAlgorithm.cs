@@ -1,4 +1,4 @@
-﻿
+﻿using OpenCvSharp;
 using SaigeVision.Net.V2;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GitDockPanelSuite.Core;
-using OpenCvSharp;
 
 namespace GitDockPanelSuite.Algorithm
 {
@@ -268,6 +267,7 @@ namespace GitDockPanelSuite.Algorithm
                 if (areaFilter.isUse)
                 {
                     if (areaFilter.min > 0 && area < areaFilter.min) continue;
+
                     if (areaFilter.max > 0 && area > areaFilter.max) continue;
 
                     showArea = (int)(area + 0.5f);
@@ -396,7 +396,9 @@ namespace GitDockPanelSuite.Algorithm
         {
             resultArea = null;
 
-            if (!IsInspected) return -1;
+            //검사가 완료되지 않았다면, 리턴
+            if (!IsInspected)
+                return -1;
 
             if (_findArea is null || _findArea.Count <= 0) return -1;
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GitDockPanelSuite.Inspect;
+using GitDockPanelSuite.Teach;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,15 +9,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitDockPanelSuite.Inspect;
-using GitDockPanelSuite.Teach;
-using GitDockPanelSuite.Core;
 using WeifenLuo.WinFormsUI.Docking;
 using BrightIdeasSoftware;
 
 namespace GitDockPanelSuite
 {
-
     public partial class ResultForm : DockContent
     {
         //검사 결과를 보여주기 위한 컨트롤 추가
@@ -157,7 +155,7 @@ namespace GitDockPanelSuite
             _treeListView.SetObjects(new List<InspWindow> { inspWindow }); // SetObjects는 리스트만 받기 때문에 inspWindow를 리스트로 감싸서 전달
             _treeListView.Expand(inspWindow); // 해당 InspWindow 항목 확장
 
-            if (inspWindow.InspResultList.Count > 0)
+            if(inspWindow.InspResultList.Count > 0)
             {
                 InspResult inspResult = inspWindow.InspResultList[0];
                 ShowDedtail(inspResult);

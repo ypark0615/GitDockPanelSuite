@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using GitDockPanelSuite.Core;
 using GitDockPanelSuite.Inspect;
-using OpenCvSharp.Internal.Vectors;
 
 namespace GitDockPanelSuite.Teach
 {
@@ -27,9 +26,10 @@ namespace GitDockPanelSuite.Teach
         [XmlElement("InspAlgorithm")]
         public List<InspAlgorithm> AlgorithmList { get; set; } = new List<InspAlgorithm>();
 
-        public List<InspResult> InspResultList { get; set; } = new List<InspResult>(); // 검사 결과를 저장하기 위한 리스트
+        // 검사 결과를 저장하기 위한 리스트
+        public List<InspResult> InspResultList { get; set; } = new List<InspResult>();
 
-        //#11_MATCHING#1 패턴매칭에 필요한 티칭 이미지 관리 기능
+        //#12_MODEL SAVE#6 Xml Serialize를 하지 않도록 설정
         [XmlIgnore]
         public List<Mat> _windowImages = new List<Mat>();
         public void AddWindowImage(Mat image)
@@ -198,7 +198,7 @@ namespace GitDockPanelSuite.Teach
         public virtual bool OffsetMove(OpenCvSharp.Point offset) // 검사 영역 위치 이동
         {
             Rect windowRect = WindowArea; // 현재 위치 정보
-            windowRect.X += offset.X; //
+            windowRect.X += offset.X;
             windowRect.Y += offset.Y;
             WindowArea = windowRect; // 이동된 위치 정보 저장
             return true;
@@ -211,6 +211,7 @@ namespace GitDockPanelSuite.Teach
             return true;
         }
 
+        //#12_MODEL SAVE#1 InspWindow가 가지고 있는 이미지를 모델 폴더에 저장과 로딩
         public virtual bool SaveInspWindow(Model curModel)
         {
             if (curModel is null) return false;
@@ -227,6 +228,7 @@ namespace GitDockPanelSuite.Teach
                 string targetPath = Path.Combine(imgDir, $"{UID}_{i}.png");
                 Cv2.ImWrite(targetPath, img);
             }
+
             return true;
         }
 
@@ -245,7 +247,6 @@ namespace GitDockPanelSuite.Teach
                     MatchAlgorithm matchAlgo = algo as MatchAlgorithm;
 
                     int i = 0;
-
                     while (true)
                     {
                         string targetPath = Path.Combine(imgDir, $"{UID}_{i}.png");
@@ -265,7 +266,8 @@ namespace GitDockPanelSuite.Teach
             return true;
         }
 
-        public void ResetInspResult() // 검사 결과 초기화 함수
+        // 검사 결과 초기화 함수
+        public void ResetInspResult()
         {
             foreach (var algorithm in AlgorithmList)
             {
@@ -275,7 +277,8 @@ namespace GitDockPanelSuite.Teach
             InspResultList.Clear();
         }
 
-        public void AddInspResult(InspResult inspResult) // 검사 결과 추가 함수
+		// 검사 결과 추가 함수
+        public void AddInspResult(InspResult inspResult)
         {
             InspResultList.Add(inspResult);
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GitDockPanelSuite.Core;
+using System;
 using System.Windows.Forms;
 using WeifenLuo.WinFormsUI.Docking;
 using GitDockPanelSuite.Util;

@@ -1,5 +1,4 @@
 ﻿using GitDockPanelSuite.Core;
-using GitDockPanelSuite.Grab;
 using GitDockPanelSuite.Setting;
 using System;
 using System.Collections.Generic;
@@ -23,6 +22,8 @@ namespace GitDockPanelSuite
 
         private void btnGrab_Click(object sender, EventArgs e)
         {
+
+            Global.Inst.InspStage.CheckImageBuffer();
             Global.Inst.InspStage.Grab(0);
         }
 
@@ -37,9 +38,12 @@ namespace GitDockPanelSuite
                 Global.Inst.InspStage.CycleInspect(cycleMode);
             }
             else
-            {
                 Global.Inst.InspStage.StartAutoRun(); // 카메라가 있는 경우 자동 검사 모드 시작
-            }
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            Global.Inst.InspStage.StopCycle();
         }
 
         private void chkLive_CheckedChanged(object sender, EventArgs e)
@@ -48,10 +52,15 @@ namespace GitDockPanelSuite
 
             if (Global.Inst.InspStage.LiveMode)
             {
+                Global.Inst.InspStage.SetWorkingState(WorkingState.LIVE);
+
                 //#13_SET_IMAGE_BUFFER#4 그랩시 이미지 버퍼를 먼저 설정하도록 변경
                 Global.Inst.InspStage.CheckImageBuffer();
                 Global.Inst.InspStage.Grab(0);
             }
+            else
+                Global.Inst.InspStage.SetWorkingState(WorkingState.NONE);
         }
+
     }
 }

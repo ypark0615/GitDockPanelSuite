@@ -12,21 +12,30 @@ namespace GitDockPanelSuite.Inspect
 {
     public class InspResult
     {
-        public InspWindow InspObject { get; set; } // 검사한 ROI 정보
-        public string GroupID { get; set; } // ROI가 여러개 있을 때, 기준이 되는 ID
-        public string ObjectID { get; set; } // 실제 검사한 ROI ID
+        //검사한 ROI 정보
+        public InspWindow InspObject { get; set; }
+        //ROI가 여러개 있을 때, 기준이 되는 ROI
+        public string GroupID { get; set; }
+        //실제 검사한 ROI
+        public string ObjectID { get; set; }
 
-        public InspWindowType ObjectType { get; set; } // 검사한 ROI 타입
+        //검사한 ROI의 타입
+        public InspWindowType ObjectType { get; set; }
 
-        public InspectType InspType { get; set; } // 검사한 알고리즘 타입
-        public int ErrorCode { get; set; } // 검사 결과 코드
-        public bool IsDefect { get; set; } // 불량 여부
-        public string ResultValue { get; set; } // 검사 결과 값
-        public string ResultInfos { get; set; } // 세부적인 검사 결과 정보
+        //검사한 알고리즘 타입
+        public InspectType InspType { get; set; }
+        //검사 결과 코드
+        public int ErrorCode { get; set; }
+        //결과가 불량인지 여부
+        public bool IsDefect { get; set; }
+        //결과 값(점수가 아닌 실제 값)
+        public string ResultValue { get; set; }
+        //세부적인 검사 결과
+        public string ResultInfos { get; set; }
 
+        //검사 결과로 찾은 불량 위치
         [XmlIgnore]
-        public List<DrawInspectInfo> ResultRectList { get; set; } = null; //검사 결과로 찾은 불량 위치
-        // 검사 결과는 휘발성이기 때문에 xml로 저장하지 않음
+        public List<DrawInspectInfo> ResultRectList { get; set; } = null; // 검사 결과는 휘발성이기 때문에 xml로 저장하지 않음
 
         public InspResult()
         {

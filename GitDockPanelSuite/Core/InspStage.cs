@@ -15,8 +15,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using GitDockPanelSuite.Inspect;
 using GitDockPanelSuite.Util;
-using Microsoft.Win32;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace GitDockPanelSuite.Core
 {
@@ -43,11 +43,15 @@ namespace GitDockPanelSuite.Core
         private InspWorker _inspWorker = null;
         private ImageLoader _imageLoader = null;
 
+        RegistryKey _regKey = null;
+
+        //가장 최근 모델 파일 경로를 저장하는 변수
+        private bool _lastestModelOpen = false;
+
         public bool UseCamera { get; set; } = false;
 
         private string _lotNumber;
         private string _serialID;
-
 
         public InspStage() { }
         public ImageSpace ImageSpace // 외부에서 ImageSpace 객체를 직접 조작 가능
@@ -98,7 +102,7 @@ namespace GitDockPanelSuite.Core
             _inspWorker = new InspWorker();
             _imageLoader = new ImageLoader();
 
-            //_regKey = Registry.CurrentUser.CreateSubKey("Software\\GitDockPanelSuite");
+            _regKey = Registry.CurrentUser.CreateSubKey("Software\\GitDockPanelSuite");
 
             _model = new Model(); // Model 생성
 
@@ -123,6 +127,9 @@ namespace GitDockPanelSuite.Core
 
                 InitModelGrab(MAX_GRAB_BUF);
             }
+
+            if (!LastestModelOpen())
+                MessageBox.Show("모델 열기 실패!");
 
             return true;
         }
@@ -153,6 +160,9 @@ namespace GitDockPanelSuite.Core
 
             SetBuffer(bufferCount); // 버퍼 개수 설정
 
+            eImageChannel imageChannel = (pixelBpp == 24) ? eImageChannel.Color : eImageChannel.Gray;
+            SetImageChannel(imageChannel);
+            
             //_grabManager.SetExposureTime(25000);
         }
         public void SetImageBuffer(string filePath)
@@ -180,10 +190,12 @@ namespace GitDockPanelSuite.Core
 
             if (_imageSpace != null)
             {
-                _imageSpace.SetImageInfo(pixelBpp, imageWidth, imageHeight, imageStride);
+                if (_imageSpace.ImageSize.Width != imageWidth || _imageSpace.ImageSize.Height != imageHeight)
+                {
+                    _imageSpace.SetImageInfo(pixelBpp, imageWidth, imageHeight, imageStride);
+                    SetBuffer(_imageSpace.BufferCount);
+                }
             }
-
-            SetBuffer(1);
 
             int bufferIndex = 0;
 
@@ -194,12 +206,6 @@ namespace GitDockPanelSuite.Core
             _imageSpace.Split(bufferIndex);
 
             DisplayGrabImage(bufferIndex);
-
-            if (_previewImage != null)
-            {
-                Bitmap bitmap = ImageSpace.GetBitmap(0);
-                _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
-            }
         }
 
         public void CheckImageBuffer()
@@ -293,6 +299,10 @@ namespace GitDockPanelSuite.Core
             MatchAlgorithm matchAlgo = (MatchAlgorithm)inspWindow.FindInspAlgorithm(InspectType.InspMatch);
             if (matchAlgo != null)
             {
+                matchAlgo.ImageChannel = SelImageChannel;
+                if (matchAlgo.ImageChannel == eImageChannel.Color)
+                    matchAlgo.ImageChannel = eImageChannel.Gray;
+
                 UpdateProperty(inspWindow);
             }
         }
@@ -319,7 +329,7 @@ namespace GitDockPanelSuite.Core
         }
 
 
-        public void TryInspection(InspWindow inspWindow = null)
+        public void TryInspection(InspWindow inspWindow)
         {
             UpdateDiagramEntity();
             InspWorker.TryInspect(inspWindow, InspectType.InspNone);
@@ -438,6 +448,7 @@ namespace GitDockPanelSuite.Core
             return true;
         }
 
+
         //영상 취득 완료 이벤트 발생시 후처리
         private async void _multiGrab_TransferCompleted(object sender, object e)
         {
@@ -445,13 +456,8 @@ namespace GitDockPanelSuite.Core
             SLogger.Write($"TransferCompleted {bufferIndex}");
 
             _imageSpace.Split(bufferIndex); // Grab된 이미지 분할 처리
-            DisplayGrabImage(bufferIndex);  // 화면 갱신
 
-            if (_previewImage != null)
-            {
-                Bitmap bitmap = ImageSpace.GetBitmap(0);
-                _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
-            }
+            DisplayGrabImage(bufferIndex);  // 화면 갱신
 
             //#8_LIVE#2 LIVE 모드일때, Grab을 계속 실행하여, 반복되도록 구현
             //이 함수는 await를 사용하여 비동기적으로 실행되어, 함수를 async로 선언해야 합니다.
@@ -480,14 +486,40 @@ namespace GitDockPanelSuite.Core
                 cameraForm.UpdateDisplay(bitmap);
             }
         }
-
-        public Bitmap GetBitmap(int bufferIndex = -1)
+        public void SetPreviewImage(eImageChannel channel)
         {
+            if (_previewImage is null)
+                return;
+
+            Bitmap bitmap = ImageSpace.GetBitmap(0, channel);
+            _previewImage.SetImage(BitmapConverter.ToMat(bitmap));
+
+            SetImageChannel(channel);
+        }
+
+        public void SetImageChannel(eImageChannel channel)
+        {
+            var cameraForm = MainForm.GetDockForm<CameraForm>();
+            if (cameraForm != null)
+            {
+                cameraForm.SetImageChannel(channel);
+            }
+        }
+
+        public Bitmap GetBitmap(int bufferIndex = -1, eImageChannel imageChannel = eImageChannel.None)
+        {
+            if (bufferIndex >= 0)
+                SelBufferIndex = bufferIndex;
+
+            //#BINARY FILTER#13 채널 정보가 유지되도록, eImageChannel.None 타입을 추가
+            if (imageChannel != eImageChannel.None)
+                SelImageChannel = imageChannel;
+
             // Global을 통해 다시 InspStage → ImageSpace 접근
             if (Global.Inst.InspStage.ImageSpace is null)
                 return null;
 
-            return Global.Inst.InspStage.ImageSpace.GetBitmap();
+            return Global.Inst.InspStage.ImageSpace.GetBitmap(SelBufferIndex, SelImageChannel);
         }
 
         //#7_BINARY_PREVIEW#4 이진화 프리뷰를 위해, ImageSpace에서 이미지 가져오기
@@ -496,11 +528,7 @@ namespace GitDockPanelSuite.Core
             if (bufferIndex >= 0)
                 SelBufferIndex = bufferIndex;
 
-            //#BINARY FILTER#14 채널 정보가 유지되도록, eImageChannel.None 타입을 추가
-            if (imageChannel != eImageChannel.None)
-                SelImageChannel = imageChannel;
-
-            return Global.Inst.InspStage.ImageSpace.GetMat(SelBufferIndex, SelImageChannel);
+            return Global.Inst.InspStage.ImageSpace.GetMat(SelBufferIndex, imageChannel);
         }
 
         public void UpdateDiagramEntity()
@@ -536,7 +564,7 @@ namespace GitDockPanelSuite.Core
         public bool LoadModel(string filePath)
         {
             SLogger.Write($"모델 로딩:{filePath}");
-                
+
             _model = _model.Load(filePath);
 
             if (_model is null)
@@ -553,6 +581,8 @@ namespace GitDockPanelSuite.Core
 
             UpdateDiagramEntity();
 
+            _regKey.SetValue("LastestModelPath", filePath);
+
             return true;
         }
 
@@ -565,6 +595,22 @@ namespace GitDockPanelSuite.Core
                 Global.Inst.InspStage.CurModel.Save();
             else
                 Global.Inst.InspStage.CurModel.SaveAs(filePath);
+        }
+        
+        private bool LastestModelOpen()
+        {
+            if(_lastestModelOpen) return true;
+
+            _lastestModelOpen = true;
+
+            string lastestModel = (string)_regKey.GetValue("LastestModelPath");
+
+            if (!File.Exists(lastestModel)) return true;
+
+            DialogResult result = MessageBox.Show($"최근 모델을 로딩할까요?\r\n{lastestModel}", "Question", MessageBoxButtons.YesNo);
+            if(result == DialogResult.No) return true;
+
+            return LoadModel(lastestModel);
         }
 
         public void CycleInspect(bool isCycle)
@@ -683,6 +729,7 @@ namespace GitDockPanelSuite.Core
                 cameraForm.SetWorkingState(workingState);
         }
 
+
         #region Disposable
         private bool disposed = false; // Dispose 호출 여부
 
@@ -698,12 +745,16 @@ namespace GitDockPanelSuite.Core
                         _saigeAI.Dispose(); // AI 모듈 해제
                         _saigeAI = null;
                     }
-                    if(_grabManager != null)
+                    if (_grabManager != null)
                     {
                         _grabManager.Dispose(); // 카메라 Grab 리소스 해제
                         _grabManager = null;
                     }
+
+                    _regKey.Close();
                 }
+
+                // Dispose unmanaged managed resources.
 
                 disposed = true;
             }

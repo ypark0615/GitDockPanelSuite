@@ -262,7 +262,7 @@ namespace GitDockPanelSuite.Core
 
         public long Length { get => _inspectionImage.Stride * _inspectionImage.Height; } // 전체 바이트 길이
 
-        #endregion
+        #endregion //Properties
 
         public Dictionary<int, Dictionary<eImageChannel, ImagePtr>> GetImageByChannelToClone() // 채널별 이미지 포인터 사전(복사형 IntPtr 생성)
         {
@@ -352,7 +352,7 @@ namespace GitDockPanelSuite.Core
             if (_imageInfo.Count <= index)
                 return null;
 
-            if (channel == eImageChannel.Gray) // 기본은 Gray 반환(원본)
+            if (channel == eImageChannel.Color)
             {
                 return _imageInfo[index].ToMat();
             }
@@ -407,7 +407,6 @@ namespace GitDockPanelSuite.Core
 
         #region Disposable
 
-
         private bool disposed = false; // to detect redundant calls
 
         protected virtual void Dispose(bool disposing) // ImageSpace 리소스 해제
@@ -433,7 +432,11 @@ namespace GitDockPanelSuite.Core
                                 innerImage.Value.Dispose();
                         }
                     }
+
+                    // Dispose managed resources.
                 }
+
+                // Dispose unmanaged managed resources.
 
                 disposed = true;
             }

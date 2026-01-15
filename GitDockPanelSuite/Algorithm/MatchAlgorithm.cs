@@ -103,8 +103,44 @@ namespace GitDockPanelSuite.Algorithm
 
             for (int i = 0; i < _templateImages.Count; i++)
             {
-                // 템플릿 매칭 수행
-                Cv2.MatchTemplate(image, _templateImages[i], result, TemplateMatchModes.CCoeffNormed);
+                Mat srcImage = image.Clone();
+                if(srcImage.Type() != _templateImages[i].Type())
+                {
+                    if(srcImage.Type() == MatType.CV_8UC3)
+                        Cv2.CvtColor(srcImage, srcImage, ColorConversionCodes.BGR2GRAY);
+                }
+
+                if(srcImage.Width < _templateImages[i].Width || srcImage.Height < _templateImages[i].Height)
+                {
+                    Mat templImage = _templateImages[i].Clone();
+
+                    double scaleW = (double)srcImage.Width / templImage.Width;
+                    double scaleH = (double)srcImage.Height / templImage.Height;
+
+                    // 비율 유지하면서 들어갈 수 있는 최대 스케일
+                    double scale = Math.Min(scaleW, scaleH);
+
+                    if (scale > 0)
+                    {
+                        Size newSize = new Size(
+                            (int)(templImage.Width * scale),
+                            (int)(templImage.Height * scale)
+                        );
+
+                        Cv2.Resize(templImage, templImage, newSize, 0, 0, InterpolationFlags.Area);
+
+                        Cv2.MatchTemplate(srcImage, templImage, result, TemplateMatchModes.CCoeffNormed);
+                    }
+                    else
+                    {
+                        MessageBox.Show("박스 크기가 너무 작아 검사가 불가능합니다.");
+                        return false;
+                    }
+                }
+                else
+                    // 템플릿 매칭 수행
+                    Cv2.MatchTemplate(srcImage, _templateImages[i], result, TemplateMatchModes.CCoeffNormed);
+
 
                 // 가장 높은 점수 위치 찾기
                 Cv2.MinMaxLoc(result, out _, out double value, out _, out Point loc);
@@ -354,7 +390,6 @@ namespace GitDockPanelSuite.Algorithm
 
             foreach (var point in OutPoints)
             {
-                SLogger.Write($"매칭된 위치: {OutPoints}");
                 resultArea.Add(new DrawInspectInfo(new Rect(point.X, point.Y, _templateImages[0].Width, _templateImages[0].Height),
                     info, InspectType.InspMatch, decisionType));
             }

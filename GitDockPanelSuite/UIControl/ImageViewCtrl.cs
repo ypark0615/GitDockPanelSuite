@@ -71,6 +71,7 @@ namespace GitDockPanelSuite.UIControl
 
         //#8_INSPECT_BINARY#15 템플릿 매칭 결과 출력을 위해 Rectangle 리스트 변수 설정
         private List<DrawInspectInfo> _rectInfos = new List<DrawInspectInfo>();
+        public string WorkingState { get; set; } = "";
 
         private InspectResultCount _inspectResultCount = new InspectResultCount();
 
@@ -109,6 +110,8 @@ namespace GitDockPanelSuite.UIControl
         //팝업 메뉴
         private ContextMenuStrip _contextMenu;
 
+        private readonly object _lock = new object();
+
         public ImageViewCtrl()
         {
             InitializeComponent();
@@ -136,21 +139,21 @@ namespace GitDockPanelSuite.UIControl
         //#10_INSPWINDOW#17 InspWindow 타입에 따른, 칼라 정보 얻는 함수
         public Color GetWindowColor(InspWindowType inspWindowType)
         {
-            Color color = Color.Navy;
+            Color color = Color.LightBlue;
 
             switch (inspWindowType)
             {
                 case InspWindowType.Base:
-                    color = Color.Navy;
-                    break;
-                case InspWindowType.Sub:
-                    color = Color.Coral;
+                    color = Color.LightBlue;
                     break;
                 case InspWindowType.Body:
-                    color = Color.ForestGreen;
+                    color = Color.Yellow;
+                    break;
+                case InspWindowType.Sub:
+                    color = Color.Orange;
                     break;
                 case InspWindowType.ID:
-                    color = Color.PaleGoldenrod;
+                    color = Color.Magenta;
                     break;
             }
 
@@ -201,6 +204,7 @@ namespace GitDockPanelSuite.UIControl
                 //이미지 크기가 같다면, 이미지 변경 후, 화면 갱신
                 if (_bitmapImage.Width == bitmap.Width && _bitmapImage.Height == bitmap.Height)
                 {
+                    _bitmapImage.Dispose();   // 기존 이미지 해제 후 교체
                     _bitmapImage = bitmap;
                     Invalidate();
                     return;
@@ -387,79 +391,88 @@ namespace GitDockPanelSuite.UIControl
                 }
             }
 
-            // 이미지 좌표 → 화면 좌표 변환 후 사각형 그리기
-            if (_rectInfos != null)
+            lock (_lock)
             {
-                foreach (DrawInspectInfo rectInfo in _rectInfos)
-                {
-                    Color lineColor = Color.LightCoral;
-                    if (rectInfo.decision == DecisionType.Defect)
-                        lineColor = Color.Red;
-                    else if (rectInfo.decision == DecisionType.Good)
-                        lineColor = Color.LightGreen;
-
-                    Rectangle rect = new Rectangle(rectInfo.rect.X, rectInfo.rect.Y, rectInfo.rect.Width, rectInfo.rect.Height);
-                    Rectangle screenRect = VirtualToScreen(rect);
-
-                    using (Pen pen = new Pen(lineColor, 2))
-                    {
-                        if (rectInfo.UseRotatedRect)
-                        {
-                            PointF[] screenPoints = rectInfo.rotatedPoints
-                                                    .Select(p => VirtualToScreen(new PointF(p.X, p.Y))) // 화면 좌표계로 변환
-                                                    .ToArray();
-
-                            if (screenPoints.Length == 4)
-                            {
-                                for (int i = 0; i < 4; i++)
-                                {
-                                    g.DrawLine(pen, screenPoints[i], screenPoints[(i + 1) % 4]); // 시계방향으로 선 연결
-                                }
-                            }
-                        }
-                        else
-                        {
-                            g.DrawRectangle(pen, screenRect);
-                        }
-                    }
-
-                    if (rectInfo.info != "")
-                    {
-                        float baseFontSize = 20.0f;
-
-                        if (rectInfo.decision == DecisionType.Info)
-                        {
-                            baseFontSize = 3.0f;
-                            lineColor = Color.LightBlue;
-                        }
-
-                        float fontSize = baseFontSize * _curZoom;
-
-                        // 스코어 문자열 그리기 (우상단)
-                        string infoText = rectInfo.info;
-                        PointF textPos = new PointF(screenRect.Left, screenRect.Top); // 위로 약간 띄우기
-
-                        if (rectInfo.inspectType == InspectType.InspBinary
-                            && rectInfo.decision != DecisionType.Info)
-                        {
-                            textPos.Y = screenRect.Bottom - fontSize;
-                        }
-
-                        DrawText(g, infoText, textPos, fontSize, lineColor);
-                    }
-                }
+                DrawRectInfo(g);
             }
 
+            if (WorkingState != "")
+            {
+                float fontSize = 20.0f;
+                Color stateColor = Color.FromArgb(255, 128, 0);
+                PointF textPos = new PointF(10, 10);
+                DrawText(g, WorkingState, textPos, fontSize, stateColor);
+            }
 
-            if(_inspectResultCount.Total > 0)
+            if (_inspectResultCount.Total > 0)
             {
                 string resultText = $"Total: {_inspectResultCount.Total}\r\nOK: {_inspectResultCount.OK}\r\nNG: {_inspectResultCount.NG}";
-                // 결과 문자열 (결과 갯수, OK 결과 갯수, NG 결과 갯수)
 
-                float fontSize = 12.0f; // 기본 폰트 크기
-                Color resultColor = Color.FromArgb(255, 255, 255); // 흰색
-                PointF textPos = new PointF(Width - 80, 10); // 우측 상단
-                DrawText(g, resultText, textPos, fontSize, resultColor); // 텍스트 표출
+                float fontSize = 12.0f;
+                Color resultColor = Color.FromArgb(255, 255, 255);
+                PointF textPos = new PointF(Width - 80, 10);
+                DrawText(g, resultText, textPos, fontSize, resultColor);
+            }
+        }
+        private void DrawRectInfo(Graphics g)
+        {
+            if (_rectInfos == null || _rectInfos.Count <= 0)
+                return;
+
+            // 이미지 좌표 → 화면 좌표 변환 후 사각형 그리기
+            foreach (DrawInspectInfo rectInfo in _rectInfos)
+            {
+                Color lineColor = Color.LightCoral;
+                if (rectInfo.decision == DecisionType.Defect)
+                    lineColor = Color.Red;
+                else if (rectInfo.decision == DecisionType.Good)
+                    lineColor = Color.LightGreen;
+
+                Rectangle rect = new Rectangle(rectInfo.rect.X, rectInfo.rect.Y, rectInfo.rect.Width, rectInfo.rect.Height);
+                Rectangle screenRect = VirtualToScreen(rect);
+
+                using (Pen pen = new Pen(lineColor, 2))
+                {
+                    if (rectInfo.UseRotatedRect)
+                    {
+                        PointF[] screenPoints = rectInfo.rotatedPoints
+                                                .Select(p => VirtualToScreen(new PointF(p.X, p.Y))) // 화면 좌표계로 변환
+                                                .ToArray();
+
+                        if (screenPoints.Length == 4)
+                        {
+                            for (int i = 0; i < 4; i++)
+                                g.DrawLine(pen, screenPoints[i], screenPoints[(i + 1) % 4]); // 시계방향으로 선 연결
+                        }
+                    }
+                    else
+                        g.DrawRectangle(pen, screenRect);
+                }
+
+                if (rectInfo.info != "")
+                {
+                    float baseFontSize = 20.0f;
+
+                    if (rectInfo.decision == DecisionType.Info)
+                    {
+                        baseFontSize = 3.0f;
+                        lineColor = Color.LightBlue;
+                    }
+
+                    float fontSize = baseFontSize * _curZoom;
+
+                    // 스코어 문자열 그리기 (우상단)
+                    string infoText = rectInfo.info;
+                    PointF textPos = new PointF(screenRect.Left, screenRect.Top); // 위로 약간 띄우기
+
+                    if (rectInfo.inspectType == InspectType.InspBinary
+                        && rectInfo.decision != DecisionType.Info)
+                    {
+                        textPos.Y = screenRect.Bottom - fontSize;
+                    }
+
+                    DrawText(g, infoText, textPos, fontSize, lineColor);
+                }
             }
         }
 
@@ -1014,14 +1027,18 @@ namespace GitDockPanelSuite.UIControl
         //#8_INSPECT_BINARY#17 화면에 보여줄 영역 정보를 표시하기 위해, 위치 입력 받는 함수
         public void AddRect(List<DrawInspectInfo> rectInfos)
         {
-            _rectInfos.AddRange(rectInfos);
-            Invalidate();
+            lock (_lock)
+            {
+                _rectInfos.AddRange(rectInfos);
+                Invalidate();
+            }
         }
 
         public void SetInspResultCount(InspectResultCount inspectResultCount)
         {
             _inspectResultCount = inspectResultCount;
         }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             _isCtrlPressed = keyData == Keys.Control;
@@ -1103,7 +1120,13 @@ namespace GitDockPanelSuite.UIControl
 
         public void ResetEntity()
         {
-            _rectInfos.Clear();
+            lock (_lock)
+            {
+                _rectInfos.Clear();
+                _diagramEntityList.Clear();
+                _multiSelectedEntities.Clear();
+                _selEntity = null;
+            }
             Invalidate();
         }
 

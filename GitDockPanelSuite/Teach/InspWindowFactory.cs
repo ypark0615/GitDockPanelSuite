@@ -1,11 +1,9 @@
-﻿using System;
+﻿using GitDockPanelSuite.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using GitDockPanelSuite.Algorithm;
-using GitDockPanelSuite.Core;
 
 namespace GitDockPanelSuite.Teach
 {
@@ -16,11 +14,14 @@ namespace GitDockPanelSuite.Teach
 
         public static InspWindowFactory Inst
         {
-            get { return _instance.Value; }
+            get
+            {
+                return _instance.Value;
+            }
         }
         #endregion
 
-
+        //같은 타입의 일련번호 관리를 위한 딕셔너리
         private Dictionary<string, int> _windowTypeNo = new Dictionary<string, int>();
 
         public InspWindowFactory() { }
@@ -29,10 +30,12 @@ namespace GitDockPanelSuite.Teach
         public InspWindow Create(InspWindowType windowType, bool addAlgorithm = true)
         {
             string name, prefix;
-            if (!GetWindowName(windowType, out name, out prefix)) return null;
+            if (!GetWindowName(windowType, out name, out prefix))
+                return null;
 
             InspWindow inspWindow = new InspWindow(windowType, name);
-            if(inspWindow is null) return null;
+            if (inspWindow is null)
+                return null;
 
             if (!_windowTypeNo.ContainsKey(name))
                 _windowTypeNo[name] = 0;

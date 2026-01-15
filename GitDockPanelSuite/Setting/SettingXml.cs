@@ -22,7 +22,8 @@ namespace GitDockPanelSuite.Setting
         {
             get
             {
-                if (_setting is null) Load();
+                if (_setting is null)
+                    Load();
 
                 return _setting;
             }
@@ -32,7 +33,8 @@ namespace GitDockPanelSuite.Setting
         //환경설정 로딩
         public static void Load()
         {
-            if (_setting != null) return;
+            if (_setting != null)
+                return;
 
             //환경설정 경로 생성
             string settingFilePath = System.IO.Path.Combine(Environment.CurrentDirectory, SETTING_FILE_NAME);
@@ -87,6 +89,8 @@ namespace GitDockPanelSuite.Setting
 
         public CameraType CamType { get; set; } = CameraType.WebCam;
 
-        public bool CycleMode { get; set; } = false; // 연속 검사 모드
+        //#15_INSP_WORKER#1 연속 검사 모드
+        public bool CycleMode { get; set; } = false;
+
     }
 }

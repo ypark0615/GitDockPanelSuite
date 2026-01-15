@@ -79,7 +79,7 @@ namespace GitDockPanelSuite
 
         private void LoadSetting()
         {
-            cycleModeToolStripMenuItem.Checked = SettingXml.Inst.CycleMode;
+            cycleModeMenuItem.Checked = SettingXml.Inst.CycleMode;
         }
 
 
@@ -190,9 +190,11 @@ namespace GitDockPanelSuite
             }
         }
 
-        private void cycleModeToolStripMenuItem_Click(object sender, EventArgs e)
+        //#15_INSP_WORKER#3 Cycle 모드 설정
+        private void cycleModeMenuItem_Click(object sender, EventArgs e)
         {
-            bool isChecked = cycleModeToolStripMenuItem.Checked;
+            // 현재 체크 상태 확인
+            bool isChecked = cycleModeMenuItem.Checked;
             SettingXml.Inst.CycleMode = isChecked;
         }
     }

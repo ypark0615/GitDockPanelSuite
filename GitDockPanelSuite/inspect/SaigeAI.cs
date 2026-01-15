@@ -21,7 +21,7 @@ namespace GitDockPanelSuite
     1) SaigeVision.Net.Core.V2 참조 추가
     2) SaigeVision.Net.V2 참조 추가
     3) 솔루션 플렛폼 x64 추가
-    4) class SaigeAI 코드 구현 <-- 현재
+    4) class SaigeAI 코드 구현
     5) 전체 검사를 관리하는 InspStage 클래스 구현
     6) 싱글톤 패턴을 이용하여 전역적으로 접근할 수 있도록 Global 클래스 구현
     7) AIModuleProp UserControl 구현
@@ -121,7 +121,9 @@ namespace GitDockPanelSuite
 
         public void LoadSegEngine(string modelPath)
         {
-            /*(모델 파일 경로, GPU 인덱스)*/
+            // 검사하기 위한 엔진에 대한 객체를 생성합니다.
+            // 인스턴스 생성 시 모데파일 정보와 GPU Index를 입력해줍니다.
+            // 필요에 따라 batch size를 입력합니다
             _segEngine = new SegmentationEngine(modelPath, 0);
 
             // 검사 전 option에 대한 설정을 가져옵니다

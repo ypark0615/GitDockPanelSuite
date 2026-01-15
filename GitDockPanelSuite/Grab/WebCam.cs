@@ -1,4 +1,5 @@
-﻿using OpenCvSharp;
+﻿using GitDockPanelSuite.Util;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +37,7 @@ namespace GitDockPanelSuite.Grab
             _capture.Read(_frame);
             if (!_frame.Empty())
             {
-                OnGrabCompleted(bufferIndex); // 그랩 완료
+                OnGrabCompleted(BufferIndex); // 그랩 완료
 
                 //int bufSize = _frame.Width * _frame.Height * (pixelBpp / 8);
                 //int bufSize = _frame.Width * _frame.Height * _frame.ElemSize(); // ElemSize() = pixelBpp * 8
@@ -46,13 +47,12 @@ namespace GitDockPanelSuite.Grab
                 { // _userImageBuffer가 초기화되어 있고, BufferIndex(기본 0)가 접근 가능한 범위일 때
                     if (_userImageBuffer[BufferIndex].ImageBuffer.Length >= bufSize)
                     { // 할당된 실제 메모리 크기(Byte)가 이번 프레임이 필요로 하는 메모리 크기(Byte)보다 큰가?
-                        Marshal.Copy(_frame.Data, _userImageBuffer[BufferIndex].ImageBuffer, 0, bufSize);
-                        // Mat의 데이터를 byte 배열로 복사
+                        Marshal.Copy(_frame.Data, _userImageBuffer[BufferIndex].ImageBuffer, 0, bufSize); // Mat의 데이터를 byte 배열로 복사
                     }
-                    //else
-                    //{
-                    //    SLogger.Write("Error: Buffer size is too small.", SLogger.LogType.Error);
-                    //}
+                    else
+                    {
+                        SLogger.Write("Error: Buffer size is too small.", SLogger.LogType.Error);
+                    }
                 }
 
                 OnTransferCompleted(BufferIndex); // 전송 완료

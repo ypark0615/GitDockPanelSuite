@@ -1,19 +1,19 @@
 using GitDockPanelSuite.Property;
+using OpenCvSharp.Extensions;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using OpenCvSharp;
-using System.Drawing;
-using OpenCvSharp.Extensions;
 using GitDockPanelSuite.Teach;
 
 namespace GitDockPanelSuite.Core
 {
     public class PreviewImage
     {
-        private Mat _originalImage = null;
+        private Mat _orinalImage = null;
         private Mat _previewImage = null;
 
         private InspWindow _inspWindow = null;
@@ -21,7 +21,7 @@ namespace GitDockPanelSuite.Core
 
         public void SetImage(Mat image)
         {
-            _originalImage = image;
+            _orinalImage = image;
             _previewImage = new Mat();
         }
         public void SetInspWindow(InspWindow inspwindow)
@@ -29,32 +29,34 @@ namespace GitDockPanelSuite.Core
             _inspWindow = inspwindow;
         }
 
-
+        //ShowBinaryMode에 따라 이진화 프리뷰 진행
         public void SetBinary(int lowerValue, int upperValue, bool invert, ShowBinaryMode showBinMode)
         {
             if (!_usePreview) return;
 
-            if (_originalImage == null) return;
+            if (_orinalImage == null)
+                return;
 
             var cameraForm = MainForm.GetDockForm<CameraForm>();
-            if (cameraForm == null) return;
+            if (cameraForm == null)
+                return;
 
             Bitmap bmpImage;
             if (showBinMode == ShowBinaryMode.ShowBinaryNone)
             {
-                bmpImage = BitmapConverter.ToBitmap(_originalImage);
+                bmpImage = BitmapConverter.ToBitmap(_orinalImage);
                 cameraForm.UpdateDisplay(bmpImage);
                 return;
             }
 
-            Rect windowArea = new Rect(0, 0, _originalImage.Width, _originalImage.Height);
+            Rect windowArea = new Rect(0, 0, _orinalImage.Width, _orinalImage.Height);
 
             if (_inspWindow != null)
             {
                 windowArea = _inspWindow.WindowArea;
             }
 
-            Mat orgRoi = _originalImage[windowArea];
+            Mat orgRoi = _orinalImage[windowArea];
 
             Mat grayImage = new Mat();
             if (orgRoi.Type() == MatType.CV_8UC3)
@@ -69,7 +71,7 @@ namespace GitDockPanelSuite.Core
                 binaryMask = ~binaryMask;
 
             // binaryMask는 ROI 사이즈이므로 fullBinaryMask로 확장
-            Mat fullBinaryMask = Mat.Zeros(_originalImage.Size(), MatType.CV_8UC1);
+            Mat fullBinaryMask = Mat.Zeros(_orinalImage.Size(), MatType.CV_8UC1);
             binaryMask.CopyTo(new Mat(fullBinaryMask, windowArea));
 
             if (showBinMode == ShowBinaryMode.ShowBinaryOnly)
@@ -78,12 +80,12 @@ namespace GitDockPanelSuite.Core
                 {
                     Mat colorBinary = new Mat();
                     Cv2.CvtColor(binaryMask, colorBinary, ColorConversionCodes.GRAY2BGR);
-                    _previewImage = _originalImage.Clone();
+                    _previewImage = _orinalImage.Clone();
                     colorBinary.CopyTo(new Mat(_previewImage, windowArea));
                 }
                 else
                 {
-                    _previewImage = _originalImage.Clone();
+                    _previewImage = _orinalImage.Clone();
                     binaryMask.CopyTo(new Mat(_previewImage, windowArea));
                 }
 
@@ -102,23 +104,25 @@ namespace GitDockPanelSuite.Core
 
             // 원본 이미지 복사본을 만들어 이진화된 부분에만 색을 덧씌우기
             Mat overlayImage;
-            if(_originalImage.Type() == MatType.CV_8UC1)
+            if (_orinalImage.Type() == MatType.CV_8UC1)
             {
                 overlayImage = new Mat();
-                Cv2.CvtColor(_originalImage, overlayImage, ColorConversionCodes.GRAY2BGR);
+                Cv2.CvtColor(_orinalImage, overlayImage, ColorConversionCodes.GRAY2BGR);
 
-                Mat colorOriginal = overlayImage.Clone();
+                Mat colorOrinal = overlayImage.Clone();
 
                 overlayImage.SetTo(highlightColor, fullBinaryMask); // 빨간색으로 마스킹
 
-                Cv2.AddWeighted(colorOriginal, 0.7, overlayImage, 0.3, 0, _previewImage);
+                // 원본과 합성 (투명도 적용)
+                Cv2.AddWeighted(colorOrinal, 0.7, overlayImage, 0.3, 0, _previewImage);
             }
             else
             {
-                overlayImage = _originalImage.Clone();
-                overlayImage.SetTo(highlightColor, fullBinaryMask);
+                overlayImage = _orinalImage.Clone();
+                overlayImage.SetTo(highlightColor, fullBinaryMask); // 빨간색으로 마스킹
 
-                Cv2.AddWeighted(_originalImage, 0.7, overlayImage, 0.3, 0, _previewImage);
+                // 원본과 합성 (투명도 적용)
+                Cv2.AddWeighted(_orinalImage, 0.7, overlayImage, 0.3, 0, _previewImage);
             }
 
             bmpImage = BitmapConverter.ToBitmap(_previewImage);
